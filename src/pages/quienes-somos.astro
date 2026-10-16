@@ -2,6 +2,7 @@
 // src/pages/quienes-somos.astro
 // Ejemplo práctico de página secundaria usando la plantilla maestra Layout.astro con <slot />
 import Layout from '../layouts/Layout.astro';
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <Layout
@@ -65,7 +66,7 @@ import Layout from '../layouts/Layout.astro';
         </div>
 
         <a 
-          href="/" 
+          href={baseUrl || "/"} 
           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-900 text-white text-xs font-semibold hover:bg-zinc-800 transition-colors"
         >
           ← 

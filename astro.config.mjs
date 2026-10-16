@@ -1,16 +1,7 @@
-/* 
 import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 
-export default defineConfig({
-  site: 'https://yuniopq.github.io',
-  base: '/web-iglesia',
-  integrations: [tailwind()],
-});
-*/
-import { defineConfig } from 'astro/config';
-import tailwind from '@astrojs/tailwind';
-
+// Configuración de Astro adaptada para Vercel (servido en la raíz /)
 export default defineConfig({
   integrations: [tailwind()],
 });

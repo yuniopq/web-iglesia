@@ -5,13 +5,23 @@ import TarjetaHorario from './TarjetaHorario.astro';
 
 const listaHorarios = [
   {
+    diaZh: "每周日上午",
+    diaEs: "Cada Domingo por la mañana",
+    hora: "11:00 – 12:00",
+    tituloZh: "青少年团契",
+    tituloEs: "Reunión de Jóvenes",
+    etiquetaZh: "C/ Rivadavia, 5 · 青少年与青年朋友",
+    etiquetaEs: "C/ Rivadavia, 5 · Jóvenes y adolescentes",
+    destacado: false
+  },
+  {
     diaZh: "每周日下午",
     diaEs: "Cada Domingo por la tarde",
     hora: "17:30 – 19:00",
     tituloZh: "主日崇拜",
     tituloEs: "Culto Dominical",
-    etiquetaZh: "C/ Rivadavia, 5, Granada · 欢迎参与",
-    etiquetaEs: "C/ Rivadavia, 5, Granada · Entrada libre",
+    etiquetaZh: "C/ Rivadavia, 5 · 欢迎全家参与",
+    etiquetaEs: "C/ Rivadavia, 5 · Entrada libre para todos",
     destacado: true
   }
 ];
@@ -31,8 +41,8 @@ const listaHorarios = [
       </p>
     </div>
 
-    <!-- Tarjeta de Horario Oficial Centrada -->
-    <div class="max-w-md mx-auto">
+    <!-- Tarjetas de Horarios Oficiales (2 columnas en pantallas medianas) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
       {listaHorarios.map((item) => (
         <TarjetaHorario {...item} />
       ))}

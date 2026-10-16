@@ -1,0 +1,82 @@
+---
+// src/layouts/Layout.astro
+// Layout base con diseño minimalista blanco y negro (estilo GitHub / Vercel limpio)
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { 
+  title = "西班牙Granada华人基督教会 | ICCE Granada", 
+  description = "西班牙Granada华人基督教会 (ICCE Granada) - Iglesia Cristiana China en Granada. Un hogar espiritual y cálido para familias, estudiantes y jóvenes." 
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="zh" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    
+    <!-- Fuentes tipográficas limpias y modernas -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+
+    <style is:global>
+      body {
+        font-family: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+      }
+      /* Reglas reactivas de selección de idioma */
+      html[lang="es"] .lang-zh { display: none !important; }
+      html[lang="zh"] .lang-es { display: none !important; }
+    </style>
+  </head>
+
+  <body class="bg-white text-zinc-900 antialiased flex flex-col min-h-screen selection:bg-zinc-900 selection:text-white">
+    <!-- Cabecera / Navegación modular -->
+    <Header />
+
+    <!-- Contenido principal -->
+    <main class="flex-grow" id="inicio">
+      <slot />
+    </main>
+
+    <!-- Pie de página modular -->
+    <Footer />
+
+    <!-- Script de Cambio de Idioma -->
+    <script is:inline>
+      function setLanguage(lang) {
+        document.documentElement.lang = lang;
+        localStorage.setItem('church_lang', lang);
+
+        const btnZh = document.getElementById('btn-lang-zh');
+        const btnEs = document.getElementById('btn-lang-es');
+
+        if (!btnZh || !btnEs) return;
+
+        if (lang === 'es') {
+          btnEs.className = "px-3 py-1 rounded-md transition-all bg-zinc-900 text-white font-medium shadow-xs text-xs";
+          btnZh.className = "px-3 py-1 rounded-md transition-all text-zinc-500 hover:text-zinc-900 font-medium text-xs";
+        } else {
+          btnZh.className = "px-3 py-1 rounded-md transition-all bg-zinc-900 text-white font-medium shadow-xs text-xs";
+          btnEs.className = "px-3 py-1 rounded-md transition-all text-zinc-500 hover:text-zinc-900 font-medium text-xs";
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('btn-lang-zh')?.addEventListener('click', () => setLanguage('zh'));
+        document.getElementById('btn-lang-es')?.addEventListener('click', () => setLanguage('es'));
+
+        const savedLang = localStorage.getItem('church_lang') || 'zh';
+        setLanguage(savedLang);
+      });
+    </script>
+  </body>
+</html>

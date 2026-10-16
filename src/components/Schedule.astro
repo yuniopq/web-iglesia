@@ -1,0 +1,61 @@
+---
+// src/components/Schedule.astro
+// Sección Horarios de Servicio limpia, ligera y directa
+import TarjetaHorario from './TarjetaHorario.astro';
+
+const listaHorarios = [
+  {
+    diaZh: "每主日",
+    diaEs: "Cada Domingo",
+    hora: "11:00 AM",
+    tituloZh: "主日双语崇拜",
+    tituloEs: "Culto Dominical Familiar",
+    etiquetaZh: "中西双语 · 儿童主日学",
+    etiquetaEs: "Bilingüe (Chino/ES) + Niños",
+    destacado: true
+  },
+  {
+    diaZh: "每周五",
+    diaEs: "Cada Viernes",
+    hora: "19:30 PM",
+    tituloZh: "留学生与青年团契",
+    tituloEs: "Jóvenes y Universitarios (UGR)",
+    etiquetaZh: "大学留学生 · 华裔二代青年",
+    etiquetaEs: "Estudiantes UGR y Jóvenes",
+    destacado: false
+  },
+  {
+    diaZh: "每周三",
+    diaEs: "Cada Miércoles",
+    hora: "20:00 PM",
+    tituloZh: "查经与祷告会",
+    tituloEs: "Estudio Bíblico y Oración",
+    etiquetaZh: "实体聚会 + Zoom 线上同步",
+    etiquetaEs: "Presencial + Zoom",
+    destacado: false
+  }
+];
+---
+
+<section id="horarios" class="py-20 bg-zinc-50 border-b border-zinc-200">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Encabezado simple -->
+    <div class="text-center max-w-xl mx-auto mb-12">
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-zinc-950 tracking-tight">
+        <span class="lang-zh">聚会时间</span>
+        <span class="lang-es">Horarios de Servicio</span>
+      </h2>
+      <p class="mt-2 text-zinc-500 text-sm">
+        <span class="lang-zh">欢迎来到我们当中，一同敬拜与交流。</span>
+        <span class="lang-es">Nuestras puertas están abiertas. ¡Te esperamos!</span>
+      </p>
+    </div>
+
+    <!-- Lista de tarjetas dinámica -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {listaHorarios.map((item) => (
+        <TarjetaHorario {...item} />
+      ))}
+    </div>
+  </div>
+</section>

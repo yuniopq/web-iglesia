@@ -1,0 +1,76 @@
+---
+// src/components/Header.astro
+// Barra de navegación minimalista blanco y negro (estilo GitHub)
+---
+
+<header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-zinc-200 transition-all">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+    <!-- Logo e identidad -->
+    <a href="#" class="flex items-center gap-3 group">
+      <div class="w-10 h-10 rounded-lg bg-zinc-950 text-white flex items-center justify-center font-bold text-lg shadow-sm group-hover:bg-zinc-800 transition-colors">
+        ✝
+      </div>
+      <div class="leading-tight">
+        <span class="block font-bold text-base sm:text-lg text-zinc-950 tracking-tight">
+          <span class="lang-zh">西班牙Granada华人基督教会</span>
+          <span class="lang-es">Iglesia Cristiana China en Granada</span>
+        </span>
+        <span class="block text-xs uppercase tracking-wider text-zinc-500 font-medium">
+          <span class="lang-zh">ICCE · 格拉纳达堂会</span>
+          <span class="lang-es">ICCE Granada · Iglesia Cristiana China en España</span>
+        </span>
+      </div>
+    </a>
+
+    <!-- Menú de Enlaces -->
+    <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-zinc-600">
+      <a href="#inicio" class="hover:text-zinc-950 transition-colors">
+        <span class="lang-zh">首页</span>
+        <span class="lang-es">Inicio</span>
+      </a>
+      <a href="#horarios" class="hover:text-zinc-950 transition-colors">
+        <span class="lang-zh">聚会时间</span>
+        <span class="lang-es">Horarios de Servicio</span>
+      </a>
+      <a href="/quienes-somos" class="hover:text-zinc-950 transition-colors">
+        <span class="lang-zh">关于我们</span>
+        <span class="lang-es">Quiénes Somos</span>
+      </a>
+      <a href="#contacto" class="hover:text-zinc-950 transition-colors">
+        <span class="lang-zh">联系我们</span>
+        <span class="lang-es">Contacto</span>
+      </a>
+    </nav>
+
+    <!-- Selector de Idiomas y Botón de Visita -->
+    <div class="flex items-center gap-3">
+      <!-- Selector ES / 中文 (estilo GitHub segmented control) -->
+      <div class="flex items-center bg-zinc-100 p-0.5 rounded-lg border border-zinc-200 text-xs">
+        <button 
+          id="btn-lang-zh" 
+          type="button"
+          class="px-3 py-1 rounded-md transition-all bg-zinc-900 text-white font-medium shadow-xs text-xs"
+          aria-label="切换至中文"
+        >
+          🇨🇳 中文
+        </button>
+        <button 
+          id="btn-lang-es" 
+          type="button"
+          class="px-3 py-1 rounded-md transition-all text-zinc-500 hover:text-zinc-900 font-medium text-xs"
+          aria-label="Cambiar a Español"
+        >
+          🇪🇸 ES
+        </button>
+      </div>
+
+      <a 
+        href="#horarios"
+        class="hidden sm:inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-lg text-white bg-zinc-900 hover:bg-zinc-800 transition-colors shadow-xs"
+      >
+        <span class="lang-zh">参与聚会</span>
+        <span class="lang-es">Visítanos</span>
+      </a>
+    </div>
+  </div>
+</header>

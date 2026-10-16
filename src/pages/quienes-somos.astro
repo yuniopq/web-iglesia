@@ -1,0 +1,78 @@
+---
+// src/pages/quienes-somos.astro
+// Ejemplo práctico de página secundaria usando la plantilla maestra Layout.astro con <slot />
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Quiénes Somos | 西班牙Granada华人基督教会"
+  description="Conoce la historia, visión y equipo pastoral de la Iglesia Cristiana China en Granada (ICCE Granada)."
+>
+  <section class="py-20 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Encabezado de la página -->
+      <div class="mb-12 border-b border-zinc-200 pb-8">
+        <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 block mb-2">
+          <span class="lang-zh">关于我们 · ICCE Granada</span>
+          <span class="lang-es">Quiénes Somos · ICCE Granada</span>
+        </span>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-zinc-950 tracking-tight">
+          <span class="lang-zh">我们的使命与愿景</span>
+          <span class="lang-es">Nuestra Misión y Visión</span>
+        </h1>
+      </div>
+
+      <!-- Contenido en prosa limpio estilo GitHub / Markdown -->
+      <div class="space-y-6 text-zinc-700 leading-relaxed text-base">
+        <p>
+          <span class="lang-zh">
+            <strong>西班牙Granada华人基督教会</strong>隶属于西班牙华人基督教会联合总会（ICCE）。自建立以来，我们扎根在美丽的安达卢西亚文化与大学之城——格拉纳达。
+          </span>
+          <span class="lang-es">
+            La <strong>Iglesia Cristiana China en Granada</strong> es una congregación perteneciente a la Federación de Iglesias Cristianas Chinas en España (ICCE). Nuestra misión es servir como punto de encuentro espiritual, familiar y comunitario en la ciudad de Granada.
+          </span>
+        </p>
+
+        <p>
+          <span class="lang-zh">
+            教会致力于向在西华人同胞、格拉纳达大学（UGR）留学生、学者以及西班牙本地家庭传扬耶稣基督的福音，并在真理与爱心当中建立互助、温暖的属灵大家庭。
+          </span>
+          <span class="lang-es">
+            Nuestra comunidad acompaña especialmente a familias residentes, estudiantes universitarios de la UGR, profesionales y jóvenes de segunda generación, fomentando la integración y el crecimiento en la fe mediante cultos y actividades bilingües.
+          </span>
+        </p>
+
+        <!-- Bloque destacado -->
+        <div class="p-6 rounded-xl bg-zinc-50 border border-zinc-200 my-8">
+          <h3 class="text-lg font-bold text-zinc-950 mb-2">
+            <span class="lang-zh">我们的核心价值</span>
+            <span class="lang-es">Nuestros Valores Fundamentales</span>
+          </h3>
+          <ul class="list-disc list-inside space-y-1 text-sm text-zinc-600">
+            <li>
+              <span class="lang-zh"><strong>圣经真理</strong>：以神的话语作为信仰与生活准则。</span>
+              <span class="lang-es"><strong>Verdad Bíblica</strong>: Las Escrituras como guía de vida y fe.</span>
+            </li>
+            <li>
+              <span class="lang-zh"><strong>爱心团契</strong>：接纳、扶持每位游子与家庭。</span>
+              <span class="lang-es"><strong>Amor y Fraternidad</strong>: Acogida y apoyo para toda persona y familia.</span>
+            </li>
+            <li>
+              <span class="lang-zh"><strong>跨代沟通</strong>：注重中西双语与华裔二代青年成长。</span>
+              <span class="lang-es"><strong>Enfoque Bilingüe</strong>: Puentes de comunión entre generaciones.</span>
+            </li>
+          </ul>
+        </div>
+
+        <a 
+          href="/" 
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-900 text-white text-xs font-semibold hover:bg-zinc-800 transition-colors"
+        >
+          ← 
+          <span class="lang-zh">返回首页</span>
+          <span class="lang-es">Volver al Inicio</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>

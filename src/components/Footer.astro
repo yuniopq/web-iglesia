@@ -1,30 +1,36 @@
 ---
 // src/components/Footer.astro
-// Pie de página limpio, compacto y directo
+// Pie de página limpio y compacto con la información oficial de la iglesia
 ---
 
 <footer id="contacto" class="bg-zinc-950 text-zinc-400 py-12 border-t border-zinc-900 text-xs">
   <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-8 border-b border-zinc-900">
-      <!-- Identidad -->
+      <!-- Identidad y dirección oficial -->
       <div>
         <div class="flex items-center gap-2.5 mb-1.5">
           <div class="w-6 h-6 rounded bg-white text-zinc-950 flex items-center justify-center font-bold text-xs">
             ✝
           </div>
           <span class="font-bold text-white text-sm">
-            <span class="lang-zh">西班牙Granada华人基督教会</span>
-            <span class="lang-es">Iglesia Cristiana China en Granada</span>
+            <span class="lang-zh">西班牙华人基督教會格拉納達堂</span>
+            <span class="lang-es">Iglesia Cristiana China En Granada</span>
           </span>
         </div>
-        <p class="text-zinc-500">ICCE Granada · Camino de Ronda 115, 18003 Granada</p>
+        <p class="text-zinc-400 font-medium">📍 C/ Rivadavia, 5, 18004 Granada</p>
+        <p class="text-zinc-500 mt-1">
+          <span class="lang-zh">聚会时间：每周日下午 17:30 – 19:00</span>
+          <span class="lang-es">Horario: Domingos de 17:30 a 19:00</span>
+        </p>
       </div>
 
-      <!-- Contacto esencial -->
+      <!-- Enlaces de contacto -->
       <div class="flex flex-wrap items-center gap-6 text-zinc-400">
-        <a href="tel:+34958204060" class="hover:text-white transition-colors">📞 +34 958 20 40 60</a>
-        <a href="mailto:granada@icces.org" class="hover:text-white transition-colors">✉️ granada@icces.org</a>
-        <span class="text-zinc-300">💬 WeChat: ICCE_Granada</span>
+        <a href="https://maps.google.com/?q=Calle+Rivadavia+5+Granada" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">
+          🗺️ 
+          <span class="lang-zh">Google 地图导航</span>
+          <span class="lang-es">Ver en Google Maps</span>
+        </a>
       </div>
 
       <!-- Redes -->
@@ -50,7 +56,7 @@
 
     <!-- Copyright -->
     <div class="pt-6 flex flex-col sm:flex-row items-center justify-between text-zinc-600 text-xs gap-3">
-      <p>© {new Date().getFullYear()} 西班牙Granada华人基督教会 · ICCE Granada</p>
+      <p>© {new Date().getFullYear()} 西班牙华人基督教會格拉納達堂 · Iglesia Cristiana China En Granada</p>
       <div class="flex items-center gap-4">
         <a href="/quienes-somos" class="hover:text-zinc-400">
           <span class="lang-zh">关于我们</span>

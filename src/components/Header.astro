@@ -6,20 +6,19 @@ const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-zinc-200 transition-all">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
     <!-- Logo e identidad -->
     <a href={baseUrl || "/"} class="flex items-center gap-3 group">
-      <div class="w-10 h-10 rounded-lg bg-zinc-950 text-white flex items-center justify-center font-bold text-lg shadow-sm group-hover:bg-zinc-800 transition-colors">
+      <div class="w-9 h-9 rounded-lg bg-zinc-950 text-white flex items-center justify-center font-bold text-base shadow-sm group-hover:bg-zinc-800 transition-colors">
         ✝
       </div>
       <div class="leading-tight">
-        <span class="block font-bold text-base sm:text-lg text-zinc-950 tracking-tight">
-          <span class="lang-zh">西班牙Granada华人基督教会</span>
-          <span class="lang-es">Iglesia Cristiana China en Granada</span>
+        <span class="block font-bold text-base text-zinc-950 tracking-tight">
+          <span class="lang-zh">西班牙华人基督教會格拉納達堂</span>
+          <span class="lang-es">Iglesia Cristiana China En Granada</span>
         </span>
-        <span class="block text-xs uppercase tracking-wider text-zinc-500 font-medium">
-          <span class="lang-zh">ICCE · 格拉纳达堂会</span>
-          <span class="lang-es">ICCE Granada · Iglesia Cristiana China en España</span>
+        <span class="block text-xs uppercase tracking-wider text-zinc-400 font-medium">
+          C/ Rivadavia, 5 · Granada
         </span>
       </div>
     </a>
@@ -32,7 +31,7 @@ const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
       </a>
       <a href={`${baseUrl}/#horarios`} class="hover:text-zinc-950 transition-colors">
         <span class="lang-zh">聚会时间</span>
-        <span class="lang-es">Horarios de Servicio</span>
+        <span class="lang-es">Horarios</span>
       </a>
       <a href={`${baseUrl}/quienes-somos`} class="hover:text-zinc-950 transition-colors">
         <span class="lang-zh">关于我们</span>
@@ -68,7 +67,7 @@ const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
 
       <a 
         href={`${baseUrl}/#horarios`}
-        class="hidden sm:inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-lg text-white bg-zinc-900 hover:bg-zinc-800 transition-colors shadow-xs"
+        class="hidden sm:inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-lg text-white bg-zinc-950 hover:bg-zinc-800 transition-colors shadow-xs"
       >
         <span class="lang-zh">参与聚会</span>
         <span class="lang-es">Visítanos</span>

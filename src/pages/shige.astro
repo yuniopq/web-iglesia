@@ -1,0 +1,645 @@
+---
+// src/pages/shige.astro
+// Biblioteca de Alabanzas y Poemas/Himnos (诗歌本 / 赞美诗库)
+// Conectado a Firebase Firestore con soporte para 简谱, letra por estrofas, categorías y buscador
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="诗歌本 · 赞美诗库 | 西班牙华人基督教会格拉纳达堂"
+  description="西班牙华人基督教会格拉纳达堂诗歌库。提供诗歌简谱、歌词及试听，支持实时检索。"
+>
+  <div class="py-12 sm:py-16 bg-white min-h-[80vh]">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Encabezado de la Sección -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-zinc-200">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400 block mb-2">
+            <span class="lang-zh">属灵宝库 · 敬拜赞美</span>
+            <span class="lang-es">Biblioteca de Alabanzas · Himnario</span>
+          </span>
+          <h1 class="text-3xl sm:text-4xl font-extrabold text-zinc-950 tracking-tight">
+            <span class="lang-zh">教会诗歌本</span>
+            <span class="lang-es">Himnario & Alabanzas</span>
+          </h1>
+          <p class="mt-2 text-zinc-500 text-sm max-w-xl">
+            <span class="lang-zh">汇集主日崇拜与青少年团契常用诗歌，提供简谱、完整歌词及调号查阅。</span>
+            <span class="lang-es">Colección de canciones del culto y jóvenes. Partituras en cifrado (简谱), letras completas y tonalidades.</span>
+          </p>
+        </div>
+
+        <!-- Botón para añadir canción -->
+        <div class="flex items-center gap-3">
+          <button
+            id="btn-open-add-modal"
+            type="button"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-zinc-950 text-white text-xs font-semibold hover:bg-zinc-800 transition-colors shadow-xs"
+          >
+            <span>+</span>
+            <span class="lang-zh">添加新诗歌</span>
+            <span class="lang-es">Añadir Canción</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra de Filtros y Búsqueda -->
+      <div class="my-8 space-y-4">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <!-- Input de búsqueda -->
+          <div class="relative flex-grow">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="搜索歌名、歌词关键词或调号 (ej: 这一生最美的祝福, 1=D)..."
+              class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all placeholder:text-zinc-400"
+            />
+            <svg class="w-4 h-4 text-zinc-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Etiquetas de Categorías -->
+        <div class="flex flex-wrap items-center gap-2 text-xs" id="category-pills">
+          <button type="button" data-category="ALL" class="pill-btn active px-3 py-1.5 rounded-md font-medium border border-zinc-900 bg-zinc-900 text-white transition-all">
+            <span class="lang-zh">全部诗歌</span>
+            <span class="lang-es">Todas</span>
+          </button>
+          <button type="button" data-category="敬拜赞美" class="pill-btn px-3 py-1.5 rounded-md font-medium border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 transition-all">
+            <span class="lang-zh">敬拜赞美</span>
+            <span class="lang-es">Adoración</span>
+          </button>
+          <button type="button" data-category="青年团契" class="pill-btn px-3 py-1.5 rounded-md font-medium border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 transition-all">
+            <span class="lang-zh">青年团契</span>
+            <span class="lang-es">Jóvenes</span>
+          </button>
+          <button type="button" data-category="经典圣诗" class="pill-btn px-3 py-1.5 rounded-md font-medium border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 transition-all">
+            <span class="lang-zh">经典圣诗</span>
+            <span class="lang-es">Himnos Clásicos</span>
+          </button>
+          <button type="button" data-category="感恩奉献" class="pill-btn px-3 py-1.5 rounded-md font-medium border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 transition-all">
+            <span class="lang-zh">感恩奉献</span>
+            <span class="lang-es">Gratitud</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Estado de carga -->
+      <div id="loading-spinner" class="py-16 text-center text-zinc-400 text-sm">
+        <div class="inline-block animate-spin w-6 h-6 border-2 border-zinc-900 border-t-transparent rounded-full mb-3"></div>
+        <p class="lang-zh">正在载入诗歌库...</p>
+        <p class="lang-es">Cargando biblioteca de alabanzas...</p>
+      </div>
+
+      <!-- Cuadrícula de Canciones -->
+      <div id="songs-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 hidden">
+        <!-- Renderizado dinámicamente con JavaScript -->
+      </div>
+
+      <!-- Estado vacío (sin resultados) -->
+      <div id="empty-state" class="py-16 text-center text-zinc-500 hidden border border-dashed border-zinc-200 rounded-xl">
+        <p class="text-base font-medium text-zinc-800">
+          <span class="lang-zh">没有找到相关诗歌</span>
+          <span class="lang-es">No se encontraron canciones</span>
+        </p>
+        <p class="text-xs text-zinc-400 mt-1">
+          <span class="lang-zh">请尝试更换搜索词，或点击上方“添加新诗歌”</span>
+          <span class="lang-es">Prueba con otra búsqueda o haz clic en "Añadir Canción"</span>
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: VISOR DE DETALLE DE LA POESÍA / CANCIÓN -->
+  <div id="modal-song-detail" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-zinc-200 overflow-hidden">
+      <!-- Cabecera del Modal -->
+      <div class="px-6 py-5 border-b border-zinc-200 flex items-start justify-between bg-zinc-50">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span id="detail-category" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-200 text-zinc-800"></span>
+            <span id="detail-tone" class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-zinc-900 text-white"></span>
+          </div>
+          <h2 id="detail-title" class="text-xl sm:text-2xl font-bold text-zinc-950"></h2>
+        </div>
+        <button id="btn-close-detail" type="button" class="text-zinc-400 hover:text-zinc-900 text-2xl leading-none p-1">
+          &times;
+        </button>
+      </div>
+
+      <!-- Selector de Pestaña: 简谱 (Partitura) vs 歌词 (Letra) vs 试听 (Audio) -->
+      <div class="flex border-b border-zinc-200 px-6 bg-white text-xs font-semibold">
+        <button id="tab-btn-jianpu" class="py-3 px-4 border-b-2 border-zinc-950 text-zinc-950 flex items-center gap-1.5 transition-all">
+          🎼 <span>简谱 (Partitura)</span>
+        </button>
+        <button id="tab-btn-lyrics" class="py-3 px-4 border-b-2 border-transparent text-zinc-500 hover:text-zinc-900 flex items-center gap-1.5 transition-all">
+          📜 <span>完整歌词 (Letra)</span>
+        </button>
+        <button id="tab-btn-audio" class="py-3 px-4 border-b-2 border-transparent text-zinc-500 hover:text-zinc-900 flex items-center gap-1.5 transition-all">
+          🎧 <span>试听 / 视频 (Audio)</span>
+        </button>
+      </div>
+
+      <!-- Contenido del Modal con Scroll -->
+      <div class="p-6 overflow-y-auto flex-grow space-y-6">
+        
+        <!-- Pestaña 1: 简谱 (Partitura) -->
+        <div id="tab-content-jianpu" class="space-y-4">
+          <div id="jianpu-container" class="rounded-xl border border-zinc-200 overflow-hidden bg-zinc-50 flex items-center justify-center p-2 min-h-[250px]">
+            <img id="detail-jianpu-img" src="" alt="简谱" class="max-w-full h-auto object-contain rounded shadow-xs hidden" />
+            <div id="jianpu-empty" class="text-center py-12 text-zinc-400 text-xs">
+              <p class="text-3xl mb-2">🎼</p>
+              <p class="font-medium text-zinc-600">该诗歌暂未上传简谱图片</p>
+              <p class="mt-1">你可以直接查阅右侧【完整歌词】或编辑补充简谱链接</p>
+            </div>
+          </div>
+          <div id="jianpu-actions" class="flex justify-end hidden">
+            <a id="detail-jianpu-link" href="#" target="_blank" rel="noopener noreferrer" class="text-xs text-zinc-600 hover:text-zinc-950 font-medium underline">
+              ↗ 在新窗口中查看高清原图
+            </a>
+          </div>
+        </div>
+
+        <!-- Pestaña 2: 歌词 (Letra estructurada) -->
+        <div id="tab-content-lyrics" class="space-y-4 hidden">
+          <!-- Control de tamaño de letra -->
+          <div class="flex items-center justify-between text-xs text-zinc-500 border-b border-zinc-100 pb-2">
+            <span>排版格式：依诗歌段落编排</span>
+            <div class="flex items-center gap-1">
+              <span>字号:</span>
+              <button id="btn-font-decrease" type="button" class="w-6 h-6 border border-zinc-200 rounded hover:bg-zinc-100 font-bold">-</button>
+              <button id="btn-font-increase" type="button" class="w-6 h-6 border border-zinc-200 rounded hover:bg-zinc-100 font-bold">+</button>
+            </div>
+          </div>
+          <!-- Contenedor de la letra -->
+          <pre id="detail-lyrics" class="font-sans text-base leading-relaxed text-zinc-800 whitespace-pre-wrap select-text bg-zinc-50 p-6 rounded-xl border border-zinc-200"></pre>
+        </div>
+
+        <!-- Pestaña 3: 试听 / YouTube -->
+        <div id="tab-content-audio" class="space-y-4 hidden">
+          <div id="audio-container" class="rounded-xl bg-zinc-50 p-6 border border-zinc-200 text-center">
+            <!-- Si es YouTube o audio -->
+            <div id="audio-player-box" class="hidden">
+              <iframe id="detail-youtube-iframe" class="w-full aspect-video rounded-lg shadow-sm hidden" src="" allowfullscreen></iframe>
+              <audio id="detail-audio-player" class="w-full mt-4 hidden" controls src=""></audio>
+            </div>
+            <div id="audio-empty" class="py-8 text-zinc-400 text-xs">
+              <p class="text-2xl mb-2">🎧</p>
+              <p class="font-medium text-zinc-600">暂无试听音频或视频链接</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Pie del Modal -->
+      <div class="px-6 py-3 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between text-xs text-zinc-400">
+        <span>西班牙华人基督教会格拉纳达堂 · 诗歌本</span>
+        <button id="btn-copy-lyrics" type="button" class="px-3 py-1 rounded border border-zinc-300 text-zinc-700 bg-white hover:bg-zinc-100 font-medium transition-colors">
+          📋 复制歌词
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: FORMULARIO PARA AÑADIR NUEVA POESÍA / CANCIÓN -->
+  <div id="modal-add-song" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-zinc-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-zinc-200 flex items-center justify-between bg-zinc-50">
+        <h3 class="font-bold text-base text-zinc-950">
+          <span class="lang-zh">添加新诗歌到云端</span>
+          <span class="lang-es">Añadir Canción a Firestore</span>
+        </h3>
+        <button id="btn-close-add" type="button" class="text-zinc-400 hover:text-zinc-900 text-2xl leading-none">&times;</button>
+      </div>
+
+      <form id="form-add-song" class="p-6 overflow-y-auto space-y-4 text-xs flex-grow">
+        <div>
+          <label class="block font-semibold text-zinc-700 mb-1">歌名 / Título <span class="text-red-500">*</span></label>
+          <input type="text" id="input-title" required placeholder="例如：这一生最美的祝福" class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-zinc-700 mb-1">调号 / Tonalidad (简谱常用)</label>
+            <input type="text" id="input-tone" placeholder="例如：1=D 4/4 或 G" class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm" />
+          </div>
+          <div>
+            <label class="block font-semibold text-zinc-700 mb-1">分类 / Categoría</label>
+            <select id="input-category" class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm bg-white">
+              <option value="敬拜赞美">敬拜赞美 (Adoración)</option>
+              <option value="青年团契">青年团契 (Jóvenes)</option>
+              <option value="经典圣诗">经典圣诗 (Himnos clásicos)</option>
+              <option value="感恩奉献">感恩奉献 (Gratitud)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-zinc-700 mb-1">简谱图片网址 / URL de imagen de 简谱 (Partitura)</label>
+          <input type="url" id="input-jianpu-url" placeholder="https://ejemplo.com/jianpu.jpg" class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm" />
+          <p class="text-[11px] text-zinc-400 mt-0.5">可填写简谱图片的公开在线链接（支持 JPG, PNG, WebP）</p>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-zinc-700 mb-1">试听链接 / URL de YouTube o Audio (可选)</label>
+          <input type="url" id="input-audio-url" placeholder="https://www.youtube.com/watch?v=..." class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-zinc-700 mb-1">完整歌词 / Letra estructurada por estrofas</label>
+          <textarea id="input-lyrics" rows="6" placeholder="输入诗歌各节歌词，段落之间空一行..." class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm font-sans"></textarea>
+        </div>
+
+        <div id="add-error-msg" class="text-red-600 text-xs hidden"></div>
+
+        <div class="pt-4 border-t border-zinc-200 flex justify-end gap-3">
+          <button type="button" id="btn-cancel-add" class="px-4 py-2 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 font-medium">取消</button>
+          <button type="submit" id="btn-submit-song" class="px-4 py-2 rounded-lg bg-zinc-950 text-white font-medium hover:bg-zinc-800 shadow-xs">保存到云端诗歌本</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SCRIPT CLIENTE PARA FIRESTORE Y CONTROL DE INTERFAZ -->
+  <script>
+    import { db } from '../lib/firebase.js';
+    import { collection, getDocs, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
+
+    // Canciones semilla precargadas por si la base de datos acaba de iniciar
+    const sampleSongs = [
+      {
+        id: "seed-1",
+        titulo: "这一生最美的祝福",
+        tituloEs: "La bendición más hermosa de esta vida",
+        tono: "1=D 4/4",
+        categoria: "敬拜赞美",
+        jianpuUrl: "https://images.unsplash.com/photo-1507838153414-b4b713384a76?auto=format&fit=crop&w=1200&q=80",
+        audioUrl: "https://www.youtube.com/watch?v=Xh0wJ2_zN7Q",
+        letra: "在无数的黑夜里，我用泪水涂抹我的眼睛\n在漫长的道路上，我用叹息抚平我的创痕\n在每一个梦醒的清晨，我渴望见到你的晨星\n在每一个日落的黄昏，我等候聆听你的声音\n\n【副歌】\n这一生最美的祝福，就是能认识主耶稣\n这一生最美的祝福，就是能信靠主耶稣\n走在高山深谷，祂会伴我同行\n我知道这是最美的祝福"
+      },
+      {
+        id: "seed-2",
+        titulo: "奇异恩典",
+        tituloEs: "Sublime Gracia (Amazing Grace)",
+        tono: "1=G 3/4",
+        categoria: "经典圣诗",
+        jianpuUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80",
+        audioUrl: "https://www.youtube.com/watch?v=CDdvReNKKuk",
+        letra: "奇异恩典 何等甘甜 我罪已得赦免\n前我失丧 今被寻回 瞎眼今得看见\n\n如此恩典 启发我心 我心敬畏降服\n初信之时 即蒙恩惠 真是何等宝贵\n\n天上万民 围绕宝座 赞美直到永远\n同心颂扬 神奇异恩 歌声响彻云霄"
+      },
+      {
+        id: "seed-3",
+        titulo: "云上太阳",
+        tituloEs: "El sol sobre las nubes",
+        tono: "1=C 4/4",
+        categoria: "青年团契",
+        jianpuUrl: "",
+        audioUrl: "https://www.youtube.com/watch?v=hB9X8p6T48A",
+        letra: "无论是住在美丽的高山，常是躺卧在阴暗的幽谷\n当你抬起头，你将会发现，主已预备。\n\n【副歌】\n云上太阳它总不改变，毫无保留照耀每一个地方\n黑暗虽笼罩，但神永与你同在，祂的爱永不改变。"
+      },
+      {
+        id: "seed-4",
+        titulo: "主的恩典样样都要数",
+        tituloEs: "Cuenta tus bendiciones",
+        tono: "1=Eb 2/4",
+        categoria: "感恩奉献",
+        jianpuUrl: "",
+        audioUrl: "",
+        letra: "有时遇见苦难如同大风浪，有时忧伤失望几乎要灰心\n若是数算恩典样样都要数，必能叫你希奇感谢主恩深\n\n【副歌】\n主的恩典样样都要数，主的恩典都要记清楚\n主的恩典样样都要数，必能叫你希奇感谢主恩深"
+      }
+    ];
+
+    let currentSongs = [];
+    let currentCategory = "ALL";
+    let searchQuery = "";
+    let activeSong = null;
+    let currentFontSize = 16; // px
+
+    const songsGrid = document.getElementById('songs-grid');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const emptyState = document.getElementById('empty-state');
+    const searchInput = document.getElementById('search-input');
+    const categoryPills = document.getElementById('category-pills');
+
+    // Modales
+    const modalDetail = document.getElementById('modal-song-detail');
+    const modalAdd = document.getElementById('modal-add-song');
+    const btnOpenAdd = document.getElementById('btn-open-add-modal');
+    const btnCloseAdd = document.getElementById('btn-close-add');
+    const btnCancelAdd = document.getElementById('btn-cancel-add');
+    const btnCloseDetail = document.getElementById('btn-close-detail');
+    const formAdd = document.getElementById('form-add-song');
+
+    // Pestañas del visor
+    const tabBtnJianpu = document.getElementById('tab-btn-jianpu');
+    const tabBtnLyrics = document.getElementById('tab-btn-lyrics');
+    const tabBtnAudio = document.getElementById('tab-btn-audio');
+    const tabContentJianpu = document.getElementById('tab-content-jianpu');
+    const tabContentLyrics = document.getElementById('tab-content-lyrics');
+    const tabContentAudio = document.getElementById('tab-content-audio');
+
+    // Botones de ajuste de letra
+    const btnFontInc = document.getElementById('btn-font-increase');
+    const btnFontDec = document.getElementById('btn-font-decrease');
+    const detailLyrics = document.getElementById('detail-lyrics');
+    const btnCopyLyrics = document.getElementById('btn-copy-lyrics');
+
+    // 1. Cargar canciones desde Firebase Firestore (con fallback a canciones de muestra)
+    function loadSongs() {
+      try {
+        const shigeCol = collection(db, 'shige');
+        const q = query(shigeCol, orderBy('createdAt', 'desc'));
+
+        onSnapshot(q, (snapshot) => {
+          loadingSpinner.classList.add('hidden');
+          
+          if (!snapshot.empty) {
+            currentSongs = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }));
+          } else {
+            // Si Firestore está vacío, usamos la lista semilla inicial
+            currentSongs = [...sampleSongs];
+          }
+
+          renderSongs();
+        }, (err) => {
+          console.warn("Firestore error o colección aún sin crear, usando lista inicial:", err);
+          loadingSpinner.classList.add('hidden');
+          currentSongs = [...sampleSongs];
+          renderSongs();
+        });
+      } catch (err) {
+        console.warn("No se pudo conectar a Firestore, usando fallback local:", err);
+        loadingSpinner.classList.add('hidden');
+        currentSongs = [...sampleSongs];
+        renderSongs();
+      }
+    }
+
+    // 2. Renderizar lista filtrada
+    function renderSongs() {
+      const filtered = currentSongs.filter(song => {
+        const matchesCategory = currentCategory === 'ALL' || song.categoria === currentCategory;
+        const q = searchQuery.toLowerCase().trim();
+        const matchesSearch = !q || 
+          (song.titulo && song.titulo.toLowerCase().includes(q)) ||
+          (song.tituloEs && song.tituloEs.toLowerCase().includes(q)) ||
+          (song.letra && song.letra.toLowerCase().includes(q)) ||
+          (song.tono && song.tono.toLowerCase().includes(q));
+
+        return matchesCategory && matchesSearch;
+      });
+
+      songsGrid.innerHTML = '';
+
+      if (filtered.length === 0) {
+        songsGrid.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      songsGrid.classList.remove('hidden');
+
+      filtered.forEach(song => {
+        const card = document.createElement('div');
+        card.className = "rounded-xl p-5 bg-white border border-zinc-200 hover:border-zinc-950 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group";
+        
+        // Primera estrofa como vista previa
+        const firstLines = (song.letra || '').split('\n').filter(l => l.trim() && !l.includes('【')).slice(0, 2).join(' / ');
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 text-zinc-600 border border-zinc-200">
+                ${song.categoria || '诗歌'}
+              </span>
+              ${song.tono ? `<span class="font-mono text-xs font-bold text-zinc-950">${song.tono}</span>` : ''}
+            </div>
+
+            <h3 class="font-bold text-base text-zinc-950 group-hover:text-zinc-700 transition-colors">
+              ${song.titulo}
+            </h3>
+            ${song.tituloEs ? `<p class="text-xs text-zinc-400 font-medium mb-3">${song.tituloEs}</p>` : ''}
+
+            <p class="text-xs text-zinc-500 line-clamp-2 my-2 leading-relaxed">
+              ${firstLines || '点击查看完整诗歌简谱与歌词...'}
+            </p>
+          </div>
+
+          <div class="pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-400 mt-3">
+            <div class="flex items-center gap-2">
+              ${song.jianpuUrl ? '<span title="包含简谱">🎼 简谱</span>' : '<span class="text-zinc-300">🎼 简谱</span>'}
+              <span title="包含歌词">📜 歌词</span>
+              ${song.audioUrl ? '<span title="包含音频">🎧 试听</span>' : ''}
+            </div>
+            <span class="text-zinc-950 font-semibold group-hover:translate-x-0.5 transition-transform">查阅 →</span>
+          </div>
+        `;
+
+        card.addEventListener('click', () => openDetailModal(song));
+        songsGrid.appendChild(card);
+      });
+    }
+
+    // 3. Abrir Modal de Detalle
+    function openDetailModal(song) {
+      activeSong = song;
+
+      document.getElementById('detail-title').textContent = song.titulo;
+      document.getElementById('detail-category').textContent = song.categoria || '诗歌';
+      document.getElementById('detail-tone').textContent = song.tono ? `调号: ${song.tono}` : '调号未定';
+
+      // 简谱 Tab
+      const jianpuImg = document.getElementById('detail-jianpu-img');
+      const jianpuEmpty = document.getElementById('jianpu-empty');
+      const jianpuActions = document.getElementById('jianpu-actions');
+      const jianpuLink = document.getElementById('detail-jianpu-link');
+
+      if (song.jianpuUrl) {
+        jianpuImg.src = song.jianpuUrl;
+        jianpuImg.classList.remove('hidden');
+        jianpuEmpty.classList.add('hidden');
+        jianpuActions.classList.remove('hidden');
+        jianpuLink.href = song.jianpuUrl;
+      } else {
+        jianpuImg.src = '';
+        jianpuImg.classList.add('hidden');
+        jianpuEmpty.classList.remove('hidden');
+        jianpuActions.classList.add('hidden');
+      }
+
+      // Letra Tab
+      detailLyrics.textContent = song.letra || '暂无歌词文本';
+      detailLyrics.style.fontSize = `${currentFontSize}px`;
+
+      // Audio Tab
+      const audioBox = document.getElementById('audio-player-box');
+      const audioEmpty = document.getElementById('audio-empty');
+      const iframe = document.getElementById('detail-youtube-iframe');
+      const audioPlayer = document.getElementById('detail-audio-player');
+
+      if (song.audioUrl) {
+        audioBox.classList.remove('hidden');
+        audioEmpty.classList.add('hidden');
+
+        if (song.audioUrl.includes('youtube.com') || song.audioUrl.includes('youtu.be')) {
+          // Extraer ID de YouTube
+          let videoId = '';
+          if (song.audioUrl.includes('v=')) {
+            videoId = song.audioUrl.split('v=')[1]?.split('&')[0];
+          } else if (song.audioUrl.includes('youtu.be/')) {
+            videoId = song.audioUrl.split('youtu.be/')[1]?.split('?')[0];
+          }
+          iframe.src = videoId ? `https://www.youtube.com/embed/${videoId}` : song.audioUrl;
+          iframe.classList.remove('hidden');
+          audioPlayer.classList.add('hidden');
+        } else {
+          audioPlayer.src = song.audioUrl;
+          audioPlayer.classList.remove('hidden');
+          iframe.classList.add('hidden');
+        }
+      } else {
+        audioBox.classList.add('hidden');
+        audioEmpty.classList.remove('hidden');
+        iframe.src = '';
+        audioPlayer.src = '';
+      }
+
+      // Si tiene 简谱, abrimos en pestaña 简谱 por defecto; si no, en 歌词
+      if (song.jianpuUrl) {
+        switchTab('jianpu');
+      } else {
+        switchTab('lyrics');
+      }
+
+      modalDetail.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // 4. Cambiar entre pestañas
+    function switchTab(tab) {
+      tabBtnJianpu.className = "py-3 px-4 border-b-2 " + (tab === 'jianpu' ? "border-zinc-950 text-zinc-950 font-bold" : "border-transparent text-zinc-500 hover:text-zinc-900") + " flex items-center gap-1.5 transition-all";
+      tabBtnLyrics.className = "py-3 px-4 border-b-2 " + (tab === 'lyrics' ? "border-zinc-950 text-zinc-950 font-bold" : "border-transparent text-zinc-500 hover:text-zinc-900") + " flex items-center gap-1.5 transition-all";
+      tabBtnAudio.className = "py-3 px-4 border-b-2 " + (tab === 'audio' ? "border-zinc-950 text-zinc-950 font-bold" : "border-transparent text-zinc-500 hover:text-zinc-900") + " flex items-center gap-1.5 transition-all";
+
+      tabContentJianpu.classList.toggle('hidden', tab !== 'jianpu');
+      tabContentLyrics.classList.toggle('hidden', tab !== 'lyrics');
+      tabContentAudio.classList.toggle('hidden', tab !== 'audio');
+    }
+
+    tabBtnJianpu?.addEventListener('click', () => switchTab('jianpu'));
+    tabBtnLyrics?.addEventListener('click', () => switchTab('lyrics'));
+    tabBtnAudio?.addEventListener('click', () => switchTab('audio'));
+
+    // Cerrar Modal Detalle
+    btnCloseDetail?.addEventListener('click', () => {
+      modalDetail.classList.add('hidden');
+      document.body.style.overflow = '';
+      document.getElementById('detail-youtube-iframe').src = '';
+    });
+
+    // Control de tamaño de letra
+    btnFontInc?.addEventListener('click', () => {
+      if (currentFontSize < 28) {
+        currentFontSize += 2;
+        detailLyrics.style.fontSize = `${currentFontSize}px`;
+      }
+    });
+
+    btnFontDec?.addEventListener('click', () => {
+      if (currentFontSize > 12) {
+        currentFontSize -= 2;
+        detailLyrics.style.fontSize = `${currentFontSize}px`;
+      }
+    });
+
+    // Copiar letra
+    btnCopyLyrics?.addEventListener('click', () => {
+      if (!activeSong) return;
+      const textToCopy = `${activeSong.titulo}\n调号: ${activeSong.tono || '未定'}\n\n${activeSong.letra || ''}`;
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        btnCopyLyrics.textContent = '✓ 已复制歌词';
+        setTimeout(() => {
+          btnCopyLyrics.textContent = '📋 复制歌词';
+        }, 2000);
+      });
+    });
+
+    // Filtros de categoría
+    categoryPills?.addEventListener('click', (e) => {
+      const target = e.target.closest('button');
+      if (!target) return;
+
+      document.querySelectorAll('#category-pills button').forEach(btn => {
+        btn.className = "pill-btn px-3 py-1.5 rounded-md font-medium border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 transition-all";
+      });
+
+      target.className = "pill-btn active px-3 py-1.5 rounded-md font-medium border border-zinc-900 bg-zinc-900 text-white transition-all";
+      currentCategory = target.getAttribute('data-category') || 'ALL';
+      renderSongs();
+    });
+
+    // Buscador
+    searchInput?.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      renderSongs();
+    });
+
+    // Modal Añadir Canción
+    btnOpenAdd?.addEventListener('click', () => {
+      modalAdd.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    });
+
+    const closeAddModal = () => {
+      modalAdd.classList.add('hidden');
+      document.body.style.overflow = '';
+      formAdd.reset();
+      document.getElementById('add-error-msg').classList.add('hidden');
+    };
+
+    btnCloseAdd?.addEventListener('click', closeAddModal);
+    btnCancelAdd?.addEventListener('click', closeAddModal);
+
+    // Guardar en Firestore
+    formAdd?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-song');
+      const errorMsg = document.getElementById('add-error-msg');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '正在保存到云端...';
+      errorMsg.classList.add('hidden');
+
+      const newSong = {
+        titulo: document.getElementById('input-title').value.trim(),
+        tono: document.getElementById('input-tone').value.trim(),
+        categoria: document.getElementById('input-category').value,
+        jianpuUrl: document.getElementById('input-jianpu-url').value.trim(),
+        audioUrl: document.getElementById('input-audio-url').value.trim(),
+        letra: document.getElementById('input-lyrics').value.trim(),
+        createdAt: serverTimestamp()
+      };
+
+      try {
+        await addDoc(collection(db, 'shige'), newSong);
+        closeAddModal();
+      } catch (err) {
+        console.error("Error al guardar en Firestore:", err);
+        errorMsg.textContent = '保存失败，请检查网络或 Firebase Firestore 规则权限。';
+        errorMsg.classList.remove('hidden');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '保存到云端诗歌本';
+      }
+    });
+
+    // Iniciar carga al cargar el DOM
+    document.addEventListener('DOMContentLoaded', loadSongs);
+  </script>
+</Layout>

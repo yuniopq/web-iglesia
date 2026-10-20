@@ -2,6 +2,7 @@
 // Configuración e inicialización del SDK de Firebase para la web
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
+import { getFirestore } from "firebase/firestore";
 
 // Configuración oficial de Firebase del proyecto web-iglesia-9210d
 const firebaseConfig = {
@@ -16,6 +17,9 @@ const firebaseConfig = {
 
 // Inicializar la aplicación de Firebase (evitando inicializaciones múltiples)
 export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+
+// Inicializar Firestore (Base de datos en la nube)
+export const db = getFirestore(app);
 
 // Inicializar Analytics solo en el entorno del navegador del cliente
 export let analytics = null;

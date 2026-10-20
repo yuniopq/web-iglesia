@@ -210,27 +210,39 @@ import Layout from '../layouts/Layout.astro';
       </div>
 
       <!-- Pie del Modal -->
-      <div class="px-6 py-3 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between text-xs text-zinc-400">
-        <span>西班牙华人基督教会格拉纳达堂 · 诗歌本</span>
-        <button id="btn-copy-lyrics" type="button" class="px-3 py-1 rounded border border-zinc-300 text-zinc-700 bg-white hover:bg-zinc-100 font-medium transition-colors">
+      <div class="px-6 py-3 border-t border-zinc-200 bg-zinc-50 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-400">
+        <div class="flex items-center gap-2">
+          <button id="btn-edit-song" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-700 bg-white hover:bg-zinc-100 font-medium transition-colors shadow-xs">
+            <span>✏️</span>
+            <span class="lang-zh">编辑修改</span>
+            <span class="lang-es">Modificar</span>
+          </button>
+          <button id="btn-delete-song" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 bg-white hover:bg-red-50 font-medium transition-colors shadow-xs">
+            <span>🗑️</span>
+            <span class="lang-zh">删除</span>
+            <span class="lang-es">Eliminar</span>
+          </button>
+        </div>
+        <button id="btn-copy-lyrics" type="button" class="px-3 py-1.5 rounded-lg border border-zinc-300 text-zinc-700 bg-white hover:bg-zinc-100 font-medium transition-colors shadow-xs">
           📋 复制歌词
         </button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: FORMULARIO PARA AÑADIR NUEVA POESÍA / CANCIÓN -->
+  <!-- MODAL: FORMULARIO PARA AÑADIR O EDITAR POESÍA / CANCIÓN -->
   <div id="modal-add-song" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-zinc-200 overflow-hidden">
       <div class="px-6 py-4 border-b border-zinc-200 flex items-center justify-between bg-zinc-50">
         <h3 class="font-bold text-base text-zinc-950">
-          <span class="lang-zh">添加新诗歌到云端</span>
-          <span class="lang-es">Añadir Canción a Firestore</span>
+          <span id="modal-form-title">添加新诗歌到云端</span>
         </h3>
         <button id="btn-close-add" type="button" class="text-zinc-400 hover:text-zinc-900 text-2xl leading-none">&times;</button>
       </div>
 
       <form id="form-add-song" class="p-6 overflow-y-auto space-y-4 text-xs flex-grow">
+        <!-- ID oculto para modo edición -->
+        <input type="hidden" id="input-edit-id" value="" />
         <div>
           <label class="block font-semibold text-zinc-700 mb-1">歌名 / Título <span class="text-red-500">*</span></label>
           <input type="text" id="input-title" required placeholder="例如：这一生最美的祝福" class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm" />
@@ -281,7 +293,7 @@ import Layout from '../layouts/Layout.astro';
   <!-- SCRIPT CLIENTE PARA FIRESTORE Y CONTROL DE INTERFAZ -->
   <script>
     import { db } from '../lib/firebase.js';
-    import { collection, getDocs, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
+    import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
 
     // Canciones semilla precargadas por si la base de datos acaba de iniciar
     const sampleSongs = [
@@ -636,10 +648,74 @@ import Layout from '../layouts/Layout.astro';
       renderSongs();
     });
 
-    // Modal Añadir Canción
+    // Botones de Editar y Eliminar
+    const btnEditSong = document.getElementById('btn-edit-song');
+    const btnDeleteSong = document.getElementById('btn-delete-song');
+    const inputEditId = document.getElementById('input-edit-id');
+    const modalFormTitle = document.getElementById('modal-form-title');
+
+    // Abrir Modal Añadir Canción (Modo nuevo)
     btnOpenAdd?.addEventListener('click', () => {
+      inputEditId.value = '';
+      modalFormTitle.textContent = '添加新诗歌到云端';
+      document.getElementById('btn-submit-song').textContent = '保存到云端诗歌本';
+      formAdd.reset();
+      document.getElementById('add-error-msg').classList.add('hidden');
       modalAdd.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
+    });
+
+    // Abrir Modal Editar Canción (Modo modificación)
+    btnEditSong?.addEventListener('click', () => {
+      if (!activeSong) return;
+      modalDetail.classList.add('hidden');
+      document.getElementById('detail-youtube-iframe').src = '';
+
+      inputEditId.value = activeSong.id;
+      modalFormTitle.textContent = `编辑修改诗歌：《${activeSong.titulo}》`;
+      document.getElementById('btn-submit-song').textContent = '保存修改 (Guardar Cambios)';
+
+      document.getElementById('input-title').value = activeSong.titulo || '';
+      document.getElementById('input-tone').value = activeSong.tono || '';
+      document.getElementById('input-category').value = activeSong.categoria || '敬拜赞美';
+      document.getElementById('input-jianpu-url').value = activeSong.jianpuUrl || '';
+      document.getElementById('input-audio-url').value = activeSong.audioUrl || '';
+      document.getElementById('input-lyrics').value = activeSong.letra || '';
+
+      document.getElementById('add-error-msg').classList.add('hidden');
+      modalAdd.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    });
+
+    // Eliminar Canción
+    btnDeleteSong?.addEventListener('click', async () => {
+      if (!activeSong) return;
+      const confirmed = confirm(`确定要从诗歌本中删除《${activeSong.titulo}》吗？\n¿Estás seguro de que deseas eliminar esta canción?`);
+      if (!confirmed) return;
+
+      btnDeleteSong.disabled = true;
+      btnDeleteSong.textContent = '正在删除...';
+
+      try {
+        if (activeSong.id.startsWith('seed-')) {
+          // Si es una canción local de muestra, la retiramos de la vista
+          currentSongs = currentSongs.filter(s => s.id !== activeSong.id);
+          renderSongs();
+        } else {
+          // Si es una canción real de Firestore, la eliminamos de la nube
+          await deleteDoc(doc(db, 'shige', activeSong.id));
+        }
+
+        modalDetail.classList.add('hidden');
+        document.body.style.overflow = '';
+        document.getElementById('detail-youtube-iframe').src = '';
+      } catch (err) {
+        console.error("Error al eliminar la canción:", err);
+        alert("删除失败，请检查 Firebase Firestore 规则权限。");
+      } finally {
+        btnDeleteSong.disabled = false;
+        btnDeleteSong.innerHTML = '<span>🗑️</span><span class="lang-zh">删除</span><span class="lang-es">Eliminar</span>';
+      }
     });
 
     const closeAddModal = () => {
@@ -652,27 +728,48 @@ import Layout from '../layouts/Layout.astro';
     btnCloseAdd?.addEventListener('click', closeAddModal);
     btnCancelAdd?.addEventListener('click', closeAddModal);
 
-    // Guardar en Firestore
+    // Guardar (Crear o Actualizar) en Firestore
     formAdd?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const submitBtn = document.getElementById('btn-submit-song');
       const errorMsg = document.getElementById('add-error-msg');
+      const editId = inputEditId.value;
       submitBtn.disabled = true;
       submitBtn.textContent = '正在保存到云端...';
       errorMsg.classList.add('hidden');
 
-      const newSong = {
+      const songData = {
         titulo: document.getElementById('input-title').value.trim(),
         tono: document.getElementById('input-tone').value.trim(),
         categoria: document.getElementById('input-category').value,
         jianpuUrl: document.getElementById('input-jianpu-url').value.trim(),
         audioUrl: document.getElementById('input-audio-url').value.trim(),
         letra: document.getElementById('input-lyrics').value.trim(),
-        createdAt: serverTimestamp()
       };
 
       try {
-        await addDoc(collection(db, 'shige'), newSong);
+        if (!editId) {
+          // 1. Modo creación nuevo
+          await addDoc(collection(db, 'shige'), {
+            ...songData,
+            createdAt: serverTimestamp()
+          });
+        } else if (editId.startsWith('seed-')) {
+          // 2. Si era una canción de muestra que se edita, se guarda como documento nuevo en Firestore
+          await addDoc(collection(db, 'shige'), {
+            ...songData,
+            createdAt: serverTimestamp()
+          });
+          currentSongs = currentSongs.filter(s => s.id !== editId);
+        } else {
+          // 3. Modo actualización en Firestore
+          const docRef = doc(db, 'shige', editId);
+          await updateDoc(docRef, {
+            ...songData,
+            updatedAt: serverTimestamp()
+          });
+        }
+
         closeAddModal();
       } catch (err) {
         console.error("Error al guardar en Firestore:", err);
@@ -680,7 +777,7 @@ import Layout from '../layouts/Layout.astro';
         errorMsg.classList.remove('hidden');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = '保存到云端诗歌本';
+        submitBtn.textContent = editId ? '保存修改 (Guardar Cambios)' : '保存到云端诗歌本';
       }
     });
 

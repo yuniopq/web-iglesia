@@ -85,6 +85,21 @@ import Layout from '../layouts/Layout.astro';
         </div>
       </div>
 
+      <!-- Banner de canciones de muestra con botón de importación a Firebase -->
+      <div id="seed-banner" class="hidden mb-6 p-4 rounded-xl bg-zinc-50 border border-zinc-200 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all">
+        <div class="flex items-center gap-2.5 text-zinc-600">
+          <span class="text-base">💡</span>
+          <span>
+            <span class="lang-zh">当前显示的是本地演示诗歌（未在云端）。您可以一键将这 4 首诗歌同步存入您的 Firebase 数据库中：</span>
+            <span class="lang-es">Actualmente se muestran canciones de muestra locales. Puedes guardarlas en tu base de datos Firebase con 1 clic:</span>
+          </span>
+        </div>
+        <button id="btn-seed-firebase" type="button" class="whitespace-nowrap px-3.5 py-1.5 rounded-lg bg-zinc-950 text-white font-medium hover:bg-zinc-800 transition-colors shadow-xs">
+          <span class="lang-zh">一键保存至 Firebase</span>
+          <span class="lang-es">Guardar en Firebase</span>
+        </button>
+      </div>
+
       <!-- Estado de carga -->
       <div id="loading-spinner" class="py-16 text-center text-zinc-400 text-sm">
         <div class="inline-block animate-spin w-6 h-6 border-2 border-zinc-900 border-t-transparent rounded-full mb-3"></div>
@@ -347,6 +362,10 @@ import Layout from '../layouts/Layout.astro';
     const detailLyrics = document.getElementById('detail-lyrics');
     const btnCopyLyrics = document.getElementById('btn-copy-lyrics');
 
+    // Banner de muestra
+    const seedBanner = document.getElementById('seed-banner');
+    const btnSeedFirebase = document.getElementById('btn-seed-firebase');
+
     // 1. Cargar canciones desde Firebase Firestore (con fallback a canciones de muestra)
     function loadSongs() {
       try {
@@ -357,12 +376,14 @@ import Layout from '../layouts/Layout.astro';
           loadingSpinner.classList.add('hidden');
           
           if (!snapshot.empty) {
+            seedBanner?.classList.add('hidden');
             currentSongs = snapshot.docs.map(doc => ({
               id: doc.id,
               ...doc.data()
             }));
           } else {
-            // Si Firestore está vacío, usamos la lista semilla inicial
+            // Si Firestore está vacío, usamos la lista semilla inicial y mostramos la opción de guardarlas
+            seedBanner?.classList.remove('hidden');
             currentSongs = [...sampleSongs];
           }
 
@@ -370,16 +391,40 @@ import Layout from '../layouts/Layout.astro';
         }, (err) => {
           console.warn("Firestore error o colección aún sin crear, usando lista inicial:", err);
           loadingSpinner.classList.add('hidden');
+          seedBanner?.classList.remove('hidden');
           currentSongs = [...sampleSongs];
           renderSongs();
         });
       } catch (err) {
         console.warn("No se pudo conectar a Firestore, usando fallback local:", err);
         loadingSpinner.classList.add('hidden');
+        seedBanner?.classList.remove('hidden');
         currentSongs = [...sampleSongs];
         renderSongs();
       }
     }
+
+    // Botón para importar canciones de muestra a Firestore
+    btnSeedFirebase?.addEventListener('click', async () => {
+      btnSeedFirebase.disabled = true;
+      btnSeedFirebase.textContent = '正在保存到云端...';
+      try {
+        const shigeCol = collection(db, 'shige');
+        for (const s of sampleSongs) {
+          const { id, ...data } = s;
+          await addDoc(shigeCol, {
+            ...data,
+            createdAt: serverTimestamp()
+          });
+        }
+        seedBanner?.classList.add('hidden');
+      } catch (err) {
+        console.error("Error al importar canciones a Firestore:", err);
+        alert("保存失败，请检查 Firebase Console 中 Firestore 的规则(Rules)是否允许写入。");
+        btnSeedFirebase.disabled = false;
+        btnSeedFirebase.textContent = '一键保存至 Firebase';
+      }
+    });
 
     // 2. Renderizar lista filtrada
     function renderSongs() {

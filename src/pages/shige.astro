@@ -773,7 +773,7 @@ import Layout from '../layouts/Layout.astro';
         closeAddModal();
       } catch (err) {
         console.error("Error al guardar en Firestore:", err);
-        errorMsg.textContent = '保存失败，请检查网络或 Firebase Firestore 规则权限。';
+        errorMsg.textContent = `保存失败 (${err.code || '权限受限'})：请在 Firebase 控制台的 Firestore 规则(Rules)中允许写入。`;
         errorMsg.classList.remove('hidden');
       } finally {
         submitBtn.disabled = false;

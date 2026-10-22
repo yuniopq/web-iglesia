@@ -52,85 +52,143 @@ import Layout from '../layouts/Layout.astro';
         </div>
       </div>
 
-      <!-- Barra de Filtros y Búsqueda -->
-      <div class="my-8 space-y-4">
-        <div class="flex flex-col sm:flex-row gap-3">
-          <!-- Input de búsqueda -->
-          <div class="relative flex-grow">
-            <input
-              type="text"
-              id="search-input"
-              placeholder="搜索歌名、歌词关键词或调号 (ej: 这一生最美的祝福, 1=D)..."
-              class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all placeholder:text-zinc-400"
-            />
-            <svg class="w-4 h-4 text-zinc-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-          </div>
-        </div>
-
-        <!-- Etiquetas de Categorías -->
-        <div class="flex flex-wrap items-center gap-2 text-xs" id="category-pills">
-          <button type="button" data-category="ALL" class="pill-btn active px-3 py-1.5 rounded-md font-medium border border-zinc-900 bg-zinc-900 text-white transition-all">
-            <span class="lang-zh">全部诗歌</span>
-            <span class="lang-es">Todas</span>
-          </button>
-          <button type="button" data-category="敬拜赞美" class="pill-btn px-3 py-1.5 rounded-md font-medium border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 transition-all">
-            <span class="lang-zh">敬拜赞美</span>
-            <span class="lang-es">Adoración</span>
-          </button>
-          <button type="button" data-category="青年团契" class="pill-btn px-3 py-1.5 rounded-md font-medium border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 transition-all">
-            <span class="lang-zh">青年团契</span>
-            <span class="lang-es">Jóvenes</span>
-          </button>
-          <button type="button" data-category="经典圣诗" class="pill-btn px-3 py-1.5 rounded-md font-medium border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 transition-all">
-            <span class="lang-zh">经典圣诗</span>
-            <span class="lang-es">Himnos Clásicos</span>
-          </button>
-          <button type="button" data-category="感恩奉献" class="pill-btn px-3 py-1.5 rounded-md font-medium border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 transition-all">
-            <span class="lang-zh">感恩奉献</span>
-            <span class="lang-es">Gratitud</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Banner de canciones de muestra con botón de importación a Firebase -->
-      <div id="seed-banner" class="hidden mb-6 p-4 rounded-xl bg-zinc-50 border border-zinc-200 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all">
-        <div class="flex items-center gap-2.5 text-zinc-600">
-          <span class="text-base">💡</span>
-          <span>
-            <span class="lang-zh">当前显示的是本地演示诗歌（未在云端）。您可以一键将这 4 首诗歌同步存入您的 Firebase 数据库中：</span>
-            <span class="lang-es">Actualmente se muestran canciones de muestra locales. Puedes guardarlas en tu base de datos Firebase con 1 clic:</span>
-          </span>
-        </div>
-        <button id="btn-seed-firebase" type="button" class="whitespace-nowrap px-3.5 py-1.5 rounded-lg bg-zinc-950 text-white font-medium hover:bg-zinc-800 transition-colors shadow-xs">
-          <span class="lang-zh">一键保存至 Firebase</span>
-          <span class="lang-es">Guardar en Firebase</span>
+      <!-- Selector de Vista: Biblioteca Completa vs Carpetas/Setlists de Culto -->
+      <div class="flex items-center gap-2 border-b border-zinc-200 mt-6 mb-8 text-sm">
+        <button id="tab-nav-library" type="button" class="py-3 px-4 border-b-2 border-zinc-950 font-bold text-zinc-950 flex items-center gap-2 transition-all">
+          <span>📚</span>
+          <span class="lang-zh">诗歌总库</span>
+          <span class="lang-es">Biblioteca de Alabanzas</span>
+        </button>
+        <button id="tab-nav-setlists" type="button" class="py-3 px-4 border-b-2 border-transparent font-medium text-zinc-500 hover:text-zinc-950 flex items-center gap-2 transition-all">
+          <span>📁</span>
+          <span class="lang-zh">敬拜歌单 (主日专集)</span>
+          <span class="lang-es">Carpetas de Culto (Setlists)</span>
+          <span id="setlist-badge-count" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-zinc-100 text-zinc-700 font-mono">1</span>
         </button>
       </div>
 
-      <!-- Estado de carga -->
-      <div id="loading-spinner" class="py-16 text-center text-zinc-400 text-sm">
-        <div class="inline-block animate-spin w-6 h-6 border-2 border-zinc-900 border-t-transparent rounded-full mb-3"></div>
-        <p class="lang-zh">正在载入诗歌库...</p>
-        <p class="lang-es">Cargando biblioteca de alabanzas...</p>
+      <!-- VISTA 1: BIBLIOTECA COMPLETA DE POESÍAS / CANCIONES -->
+      <div id="view-library" class="space-y-6">
+        <!-- Barra de Filtros y Búsqueda -->
+        <div class="space-y-4">
+          <div class="flex flex-col sm:flex-row gap-3">
+            <!-- Input de búsqueda -->
+            <div class="relative flex-grow">
+              <input
+                type="text"
+                id="search-input"
+                placeholder="搜索歌名、歌词关键词或调号 (ej: 这一生最美的祝福, 1=D)..."
+                class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all placeholder:text-zinc-400"
+              />
+              <svg class="w-4 h-4 text-zinc-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Etiquetas de Categorías -->
+          <div class="flex flex-wrap items-center gap-2 text-xs" id="category-pills">
+            <button type="button" data-category="ALL" class="pill-btn active px-3 py-1.5 rounded-md font-medium border border-zinc-900 bg-zinc-900 text-white transition-all">
+              <span class="lang-zh">全部诗歌</span>
+              <span class="lang-es">Todas</span>
+            </button>
+            <button type="button" data-category="敬拜赞美" class="pill-btn px-3 py-1.5 rounded-md font-medium border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 transition-all">
+              <span class="lang-zh">敬拜赞美</span>
+              <span class="lang-es">Adoración</span>
+            </button>
+            <button type="button" data-category="青年团契" class="pill-btn px-3 py-1.5 rounded-md font-medium border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 transition-all">
+              <span class="lang-zh">青年团契</span>
+              <span class="lang-es">Jóvenes</span>
+            </button>
+            <button type="button" data-category="经典圣诗" class="pill-btn px-3 py-1.5 rounded-md font-medium border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 transition-all">
+              <span class="lang-zh">经典圣诗</span>
+              <span class="lang-es">Himnos Clásicos</span>
+            </button>
+            <button type="button" data-category="感恩奉献" class="pill-btn px-3 py-1.5 rounded-md font-medium border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 transition-all">
+              <span class="lang-zh">感恩奉献</span>
+              <span class="lang-es">Gratitud</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Banner de canciones de muestra con botón de importación a Firebase -->
+        <div id="seed-banner" class="hidden p-4 rounded-xl bg-zinc-50 border border-zinc-200 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all">
+          <div class="flex items-center gap-2.5 text-zinc-600">
+            <span class="text-base">💡</span>
+            <span>
+              <span class="lang-zh">当前显示的是本地演示诗歌（未在云端）。您可以一键将这 5 首诗歌同步存入您的 Firebase 数据库中：</span>
+              <span class="lang-es">Actualmente se muestran canciones de muestra locales. Puedes guardarlas en tu base de datos Firebase con 1 clic:</span>
+            </span>
+          </div>
+          <button id="btn-seed-firebase" type="button" class="whitespace-nowrap px-3.5 py-1.5 rounded-lg bg-zinc-950 text-white font-medium hover:bg-zinc-800 transition-colors shadow-xs">
+            <span class="lang-zh">一键保存至 Firebase</span>
+            <span class="lang-es">Guardar en Firebase</span>
+          </button>
+        </div>
+
+        <!-- Estado de carga -->
+        <div id="loading-spinner" class="py-16 text-center text-zinc-400 text-sm">
+          <div class="inline-block animate-spin w-6 h-6 border-2 border-zinc-900 border-t-transparent rounded-full mb-3"></div>
+          <p class="lang-zh">正在载入诗歌库...</p>
+          <p class="lang-es">Cargando biblioteca de alabanzas...</p>
+        </div>
+
+        <!-- Cuadrícula de Canciones -->
+        <div id="songs-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 hidden">
+          <!-- Renderizado dinámicamente con JavaScript -->
+        </div>
+
+        <!-- Estado vacío (sin resultados) -->
+        <div id="empty-state" class="py-16 text-center text-zinc-500 hidden border border-dashed border-zinc-200 rounded-xl">
+          <p class="text-base font-medium text-zinc-800">
+            <span class="lang-zh">没有找到相关诗歌</span>
+            <span class="lang-es">No se encontraron canciones</span>
+          </p>
+          <p class="text-xs text-zinc-400 mt-1">
+            <span class="lang-zh">请尝试更换搜索词，或点击上方“添加新诗歌”</span>
+            <span class="lang-es">Prueba con otra búsqueda o haz clic en "Añadir Canción"</span>
+          </p>
+        </div>
       </div>
 
-      <!-- Cuadrícula de Canciones -->
-      <div id="songs-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 hidden">
-        <!-- Renderizado dinámicamente con JavaScript -->
-      </div>
+      <!-- VISTA 2: CARPETAS / SETLISTS DE CULTO (敬拜专集歌单) -->
+      <div id="view-setlists" class="space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-zinc-50 border border-zinc-200">
+          <div>
+            <h2 class="font-bold text-base text-zinc-950 flex items-center gap-2">
+              <span>📁</span>
+              <span class="lang-zh">敬拜诗歌单 / 专集文件夹</span>
+              <span class="lang-es">Carpetas de Culto / Setlists</span>
+            </h2>
+            <p class="text-xs text-zinc-500 mt-0.5">
+              <span class="lang-zh">为每个主日或团契聚会挑选 2~4 首特定诗歌，配备<strong>内置节拍器</strong>与<strong>大字舞台模式</strong>。</span>
+              <span class="lang-es">Selecciona 2 o 3 canciones para el culto, con metrónomo integrado y modo escenario limpio.</span>
+            </p>
+          </div>
+          <button id="btn-open-create-setlist" type="button" class="whitespace-nowrap inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-zinc-950 text-white text-xs font-semibold hover:bg-zinc-800 transition-colors shadow-xs">
+            <span>+</span>
+            <span class="lang-zh">新建敬拜歌单</span>
+            <span class="lang-es">Crear Setlist</span>
+          </button>
+        </div>
 
-      <!-- Estado vacío (sin resultados) -->
-      <div id="empty-state" class="py-16 text-center text-zinc-500 hidden border border-dashed border-zinc-200 rounded-xl">
-        <p class="text-base font-medium text-zinc-800">
-          <span class="lang-zh">没有找到相关诗歌</span>
-          <span class="lang-es">No se encontraron canciones</span>
-        </p>
-        <p class="text-xs text-zinc-400 mt-1">
-          <span class="lang-zh">请尝试更换搜索词，或点击上方“添加新诗歌”</span>
-          <span class="lang-es">Prueba con otra búsqueda o haz clic en "Añadir Canción"</span>
-        </p>
+        <!-- Cuadrícula de Setlists -->
+        <div id="setlists-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- Renderizado dinámico con JS -->
+        </div>
+
+        <!-- Estado vacío para Setlists -->
+        <div id="setlists-empty" class="py-16 text-center text-zinc-500 hidden border border-dashed border-zinc-200 rounded-xl">
+          <p class="text-2xl mb-2">📁</p>
+          <p class="text-base font-medium text-zinc-800">
+            <span class="lang-zh">暂无敬拜歌单</span>
+            <span class="lang-es">No hay carpetas de culto creadas</span>
+          </p>
+          <p class="text-xs text-zinc-400 mt-1">
+            <span class="lang-zh">点击上方“+ 新建敬拜歌单”为本周主日选择几首诗歌吧！</span>
+            <span class="lang-es">Haz clic en "+ Crear Setlist" para armar la lista de este domingo.</span>
+          </p>
+        </div>
       </div>
 
     </div>
@@ -255,6 +313,11 @@ import Layout from '../layouts/Layout.astro';
           </button>
         </div>
         <div class="flex items-center gap-2">
+          <button id="btn-enter-stage-single" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-950 text-white font-semibold hover:bg-zinc-800 transition-colors shadow-xs">
+            <span>🎙️</span>
+            <span class="lang-zh">演练模式 (节拍器)</span>
+            <span class="lang-es">Modo Escenario</span>
+          </button>
           <button id="btn-copy-song-json" type="button" class="px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-700 bg-white hover:bg-zinc-100 font-medium transition-colors shadow-xs" title="以 JSON 格式复制此歌信息">
             { } 复制 JSON
           </button>
@@ -455,6 +518,175 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </div>
 
+  <!-- MODAL: SETLIST FORM (CREAR / EDITAR CARPETA DE CULTO) -->
+  <div id="modal-setlist-form" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-zinc-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-zinc-200 flex items-center justify-between bg-zinc-50">
+        <div>
+          <h3 id="modal-setlist-title" class="font-bold text-base text-zinc-950">新建敬拜歌单</h3>
+          <p class="text-xs text-zinc-500 mt-0.5">为特定主日或团契挑选 2~4 首诗歌</p>
+        </div>
+        <button id="btn-close-setlist-form" type="button" class="text-zinc-400 hover:text-zinc-900 text-2xl leading-none">&times;</button>
+      </div>
+
+      <form id="form-setlist" class="p-6 overflow-y-auto space-y-4 text-xs flex-grow">
+        <input type="hidden" id="input-setlist-id" value="" />
+        
+        <div>
+          <label class="block font-semibold text-zinc-700 mb-1">歌单名称 / Nombre del Culto <span class="text-red-500">*</span></label>
+          <input type="text" id="input-setlist-name" required placeholder="例如：2026-10-25 主日崇拜" class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-zinc-700 mb-1">聚会日期 / Fecha</label>
+            <input type="date" id="input-setlist-date" class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm bg-white" />
+          </div>
+          <div>
+            <label class="block font-semibold text-zinc-700 mb-1">备注 / Notas (可选)</label>
+            <input type="text" id="input-setlist-notes" placeholder="例如：主领: 小张 / 伴奏: 小李" class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm" />
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="font-semibold text-zinc-700">选择诗歌 / Seleccionar Canciones (<span id="setlist-selected-count">0</span> 首已选)</label>
+            <span class="text-[10.5px] text-zinc-400">勾选并设置目标 BPM</span>
+          </div>
+          <div id="setlist-songs-picker" class="border border-zinc-200 rounded-xl divide-y divide-zinc-100 max-h-56 overflow-y-auto bg-zinc-50/50">
+            <!-- Renderizado dinámico de canciones con checkboxes y BPM inputs -->
+          </div>
+        </div>
+
+        <div id="setlist-error-msg" class="text-red-600 text-xs hidden"></div>
+
+        <div class="pt-4 border-t border-zinc-200 flex justify-end gap-3">
+          <button type="button" id="btn-cancel-setlist-form" class="px-4 py-2 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-100 font-medium text-xs">取消</button>
+          <button type="submit" id="btn-submit-setlist" class="px-5 py-2 rounded-lg bg-zinc-950 text-white font-semibold hover:bg-zinc-800 text-xs shadow-xs">
+            保存敬拜歌单
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PANTALLA COMPLETA: MODO ESCENARIO / EN VIVO (舞台演练大屏模式) -->
+  <div id="stage-mode-view" class="fixed inset-0 z-50 bg-white text-zinc-950 overflow-y-auto hidden flex-col select-none transition-colors duration-200">
+    <!-- Barra Superior de Control de Escenario -->
+    <header id="stage-header" class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-zinc-200 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-xs transition-colors">
+      <!-- Izquierda: Salir y Título -->
+      <div class="flex items-center gap-3">
+        <button id="btn-exit-stage" type="button" class="px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-700 hover:bg-zinc-100 font-semibold text-xs transition-colors shadow-2xs flex items-center gap-1.5">
+          <span>←</span>
+          <span>退出 (Salir)</span>
+        </button>
+        <div>
+          <span id="stage-setlist-title" class="font-bold text-sm text-zinc-900 block truncate max-w-[200px] sm:max-w-xs"></span>
+          <span id="stage-song-counter" class="text-[10px] text-zinc-400 block font-mono">第 1 / 3 首</span>
+        </div>
+      </div>
+
+      <!-- Centro: Píldoras de Canciones para Cambiar al Instante -->
+      <div id="stage-song-pills" class="flex items-center gap-1.5 overflow-x-auto py-1 max-w-full text-xs font-semibold">
+        <!-- Renderizado dinámico de píldoras [1. 歌名] [2. 歌名] -->
+      </div>
+
+      <!-- Derecha: Metrónomo, Tono y Ajustes Visuales -->
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <!-- WIDGET DEL METRÓNOMO DIGITAL -->
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-zinc-300 bg-zinc-50 shadow-2xs">
+          <!-- Luz LED de Pulso Rítmico -->
+          <span id="stage-metronome-led" class="w-3 h-3 rounded-full bg-zinc-300 transition-all shadow-xs" title="节拍指示灯"></span>
+          
+          <!-- Controles de BPM -->
+          <div class="flex items-center gap-0.5">
+            <button id="btn-bpm-dec" type="button" class="w-5 h-5 rounded hover:bg-zinc-200 text-zinc-800 font-bold flex items-center justify-center text-xs">-</button>
+            <span id="stage-bpm-display" class="font-mono font-bold text-xs w-9 text-center text-zinc-900 select-none">120</span>
+            <button id="btn-bpm-inc" type="button" class="w-5 h-5 rounded hover:bg-zinc-200 text-zinc-800 font-bold flex items-center justify-center text-xs">+</button>
+          </div>
+
+          <!-- Botón Play/Pausa -->
+          <button id="btn-stage-metronome-toggle" type="button" class="px-2 py-0.5 rounded bg-zinc-950 text-white font-bold text-xs hover:bg-zinc-800 transition-colors">
+            ▶ 节拍
+          </button>
+
+          <!-- Tap Tempo -->
+          <button id="btn-stage-metronome-tap" type="button" class="px-1.5 py-0.5 rounded border border-zinc-200 bg-white hover:bg-zinc-100 font-mono text-[10px] font-bold text-zinc-700" title="轻按3~4次自动测速">
+            TAP
+          </button>
+
+          <!-- Sonido On/Off -->
+          <button id="btn-stage-metronome-sound" type="button" class="text-xs p-0.5 text-zinc-600 hover:text-zinc-950" title="声音开关">
+            🔊
+          </button>
+        </div>
+
+        <!-- Transposición de Tono -->
+        <div class="flex items-center gap-1 px-2 py-1 rounded-lg border border-zinc-300 bg-zinc-50 shadow-2xs text-xs font-mono">
+          <button id="btn-stage-trans-down" type="button" class="font-bold hover:text-blue-600 px-1">-1</button>
+          <span id="stage-tone-display" class="font-bold text-zinc-900 px-1">1=D</span>
+          <button id="btn-stage-trans-up" type="button" class="font-bold hover:text-blue-600 px-1">+1</button>
+        </div>
+
+        <!-- Tamaño de Letra -->
+        <div class="flex items-center gap-1 text-xs">
+          <button id="btn-stage-font-dec" type="button" class="w-6 h-6 rounded border border-zinc-200 hover:bg-zinc-100 font-bold flex items-center justify-center">A-</button>
+          <button id="btn-stage-font-inc" type="button" class="w-6 h-6 rounded border border-zinc-200 hover:bg-zinc-100 font-bold flex items-center justify-center">A+</button>
+        </div>
+
+        <!-- Modo Oscuro / Claro de Escenario -->
+        <button id="btn-stage-theme-toggle" type="button" class="p-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-100 text-xs" title="切换深色/浅色舞台模式">
+          🌙
+        </button>
+
+        <!-- Toggle: 和弦 vs 简谱 -->
+        <div class="flex items-center rounded-lg border border-zinc-300 bg-zinc-100 p-0.5 text-[11px]">
+          <button id="btn-stage-view-chords" type="button" class="px-2 py-0.5 rounded font-bold bg-white text-zinc-950 shadow-2xs">
+            🎸 歌词
+          </button>
+          <button id="btn-stage-view-jianpu" type="button" class="px-2 py-0.5 rounded font-medium text-zinc-500 hover:text-zinc-950">
+            🎼 简谱
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Contenido Principal de Escenario: Letra Gigante o Partitura -->
+    <main class="flex-grow p-6 sm:p-12 overflow-x-hidden">
+      <!-- Vista de Acordes y Letras en Gran Formato -->
+      <div id="stage-content-chords" class="max-w-4xl mx-auto space-y-6">
+        <div class="border-b pb-4 mb-6 border-zinc-200">
+          <h1 id="stage-song-title" class="text-3xl sm:text-5xl font-extrabold tracking-tight"></h1>
+          <p id="stage-song-subtitle" class="text-xs sm:text-sm text-zinc-400 mt-1.5 font-mono"></p>
+        </div>
+
+        <!-- Contenedor de Letra Grande -->
+        <div id="stage-lyrics-body" class="leading-loose select-text font-sans">
+        </div>
+      </div>
+
+      <!-- Vista de Partitura en Gran Formato -->
+      <div id="stage-content-jianpu" class="max-w-4xl mx-auto text-center hidden">
+        <img id="stage-jianpu-img" src="" alt="简谱" class="max-w-full h-auto mx-auto rounded-xl shadow-lg border border-zinc-200" />
+        <div id="stage-jianpu-none" class="py-20 text-zinc-400 text-sm hidden">
+          <p class="text-4xl mb-3">🎼</p>
+          <p class="font-medium">该诗歌暂无简谱图片，请使用上方【🎸 歌词】模式</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Barra Inferior de Navegación de Canciones (Anterior / Siguiente) -->
+    <footer id="stage-footer" class="border-t border-zinc-200/80 px-6 py-3 bg-zinc-50/80 flex items-center justify-between text-xs text-zinc-500 font-medium transition-colors">
+      <button id="btn-stage-prev" type="button" class="px-4 py-2 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 flex items-center gap-1.5 shadow-2xs">
+        <span>← 上一首 (P)</span>
+      </button>
+      <span class="text-[11px] text-zinc-400 hidden sm:inline">提示：按空格键开关节拍器，按 ← / → 键切换歌曲</span>
+      <button id="btn-stage-next" type="button" class="px-4 py-2 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 flex items-center gap-1.5 shadow-2xs font-bold text-zinc-900">
+        <span>下一首 (N) →</span>
+      </button>
+    </footer>
+  </div>
+
   <!-- SCRIPT CLIENTE PARA FIRESTORE Y CONTROL DE INTERFAZ -->
   <script>
     import { db, storage } from '../lib/firebase.js';
@@ -522,6 +754,140 @@ import Layout from '../layouts/Layout.astro';
     let currentFontSize = 16; // px
     let currentTranspose = 0; // -11 a +11 semitonos
     let showChords = true;
+
+    // Setlists (Carpetas / Listas de Alabanza de Culto)
+    const sampleSetlists = [
+      {
+        id: "seed-setlist-1",
+        titulo: "本周主日崇拜敬拜",
+        fecha: "2026-10-25",
+        notas: "主领: 敬拜团 · 选定3首诗歌",
+        songs: [
+          { songId: "seed-5", bpm: 152 },
+          { songId: "seed-1", bpm: 76 },
+          { songId: "seed-3", bpm: 92 }
+        ]
+      }
+    ];
+
+    let currentSetlists = [];
+    let activeSetlist = null;
+    let currentStageIndex = 0;
+    let stageFontSize = 26; // px (tamaño grande para escenario)
+    let isStageDarkMode = false;
+    let stageCurrentTranspose = 0;
+    let stageView = 'chords'; // 'chords' | 'jianpu'
+
+    // -------------------------------------------------------------
+    // MOTOR DE METRÓNOMO DIGITAL (WEB AUDIO API)
+    // -------------------------------------------------------------
+    class Metronome {
+      constructor() {
+        this.audioCtx = null;
+        this.bpm = 120;
+        this.isPlaying = false;
+        this.soundEnabled = true;
+        this.currentBeat = 0;
+        this.beatsPerBar = 4;
+        this.timerId = null;
+        this.tapTimes = [];
+        this.onTick = null;
+      }
+
+      initAudio() {
+        if (!this.audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            this.audioCtx = new AudioContextClass();
+          }
+        }
+        if (this.audioCtx && this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume();
+        }
+      }
+
+      playClick(isFirst) {
+        if (!this.soundEnabled) return;
+        try {
+          this.initAudio();
+          if (!this.audioCtx) return;
+
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(isFirst ? 1100 : 750, this.audioCtx.currentTime);
+
+          gain.gain.setValueAtTime(0.85, this.audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.04);
+
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+
+          osc.start();
+          osc.stop(this.audioCtx.currentTime + 0.04);
+        } catch (e) {
+          console.warn("Metronome sound warning:", e);
+        }
+      }
+
+      start() {
+        if (this.isPlaying) return;
+        this.initAudio();
+        this.isPlaying = true;
+        this.currentBeat = 0;
+
+        const interval = (60 / this.bpm) * 1000;
+        this.tick();
+        this.timerId = setInterval(() => this.tick(), interval);
+      }
+
+      stop() {
+        this.isPlaying = false;
+        if (this.timerId) {
+          clearInterval(this.timerId);
+          this.timerId = null;
+        }
+        if (this.onTick) this.onTick(-1, false);
+      }
+
+      tick() {
+        const isFirst = this.currentBeat === 0;
+        this.playClick(isFirst);
+        if (this.onTick) this.onTick(this.currentBeat, isFirst);
+        this.currentBeat = (this.currentBeat + 1) % this.beatsPerBar;
+      }
+
+      setBpm(newBpm) {
+        this.bpm = Math.max(40, Math.min(260, Math.round(newBpm)));
+        if (this.isPlaying) {
+          clearInterval(this.timerId);
+          const interval = (60 / this.bpm) * 1000;
+          this.timerId = setInterval(() => this.tick(), interval);
+        }
+      }
+
+      tap() {
+        const now = performance.now();
+        if (this.tapTimes.length > 0 && (now - this.tapTimes[this.tapTimes.length - 1] > 2500)) {
+          this.tapTimes = [];
+        }
+        this.tapTimes.push(now);
+        if (this.tapTimes.length > 4) this.tapTimes.shift();
+
+        if (this.tapTimes.length >= 2) {
+          let intervals = [];
+          for (let i = 1; i < this.tapTimes.length; i++) {
+            intervals.push(this.tapTimes[i] - this.tapTimes[i - 1]);
+          }
+          const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+          const calculatedBpm = Math.round(60000 / avg);
+          this.setBpm(calculatedBpm);
+        }
+      }
+    }
+
+    const metronome = new Metronome();
 
     // Escalas cromáticas y mapeo para transposición
     const CHROMATIC_SHARPS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -1025,20 +1391,24 @@ import Layout from '../layouts/Layout.astro';
       }
     }
 
-    function renderLyricsSheet() {
-      if (!detailLyricsContainer || !activeSong) return;
-
-      detailLyricsContainer.style.fontSize = `${currentFontSize}px`;
-      updateTransposeStatusUI();
-
-      const text = activeSong.letra || '';
-      if (!text.trim()) {
-        detailLyricsContainer.innerHTML = '<p class="text-zinc-400 text-center py-8 text-sm">暂无歌词内容</p>';
-        return;
+    function generateLyricsHtml(text, transpose = 0, withChords = true, isDark = false) {
+      if (!text || !text.trim()) {
+        return `<p class="${isDark ? 'text-zinc-500' : 'text-zinc-400'} text-center py-8 text-sm">暂无歌词内容</p>`;
       }
 
       const lines = text.split('\n');
       const htmlLines = [];
+
+      const chordTextColor = isDark ? 'text-amber-400' : 'text-blue-600';
+      const chordBoxClass = isDark 
+        ? 'text-amber-300 bg-amber-950/60 border-amber-700/80' 
+        : 'text-blue-600 bg-blue-50/70 border-blue-200/60';
+      const chordRowBoxClass = isDark
+        ? 'bg-zinc-900/90 border-zinc-800'
+        : 'bg-zinc-100/70 border-zinc-200/80';
+      const sectionTitleClass = isDark ? 'text-zinc-400' : 'text-zinc-500';
+      const sectionDotClass = isDark ? 'bg-amber-400' : 'bg-zinc-950';
+      const lyricTextColor = isDark ? 'text-zinc-100' : 'text-zinc-900';
 
       for (let rawLine of lines) {
         const line = rawLine.trimEnd();
@@ -1052,8 +1422,8 @@ import Layout from '../layouts/Layout.astro';
         // Título de sección (ej. 【副歌】 o [Chorus])
         if (/^(【[^】]+】|\[(副歌|主歌|前奏|间奏|尾奏|桥段|Chorus|Verse|Bridge|Intro|Outro|Tag|\d+)[^\]]*\])$/i.test(line.trim())) {
           htmlLines.push(`
-            <div class="font-bold text-xs uppercase tracking-wider text-zinc-500 mt-5 mb-2 flex items-center gap-1.5 select-none">
-              <span class="w-1.5 h-1.5 rounded-full bg-zinc-950"></span>
+            <div class="font-bold text-xs uppercase tracking-wider ${sectionTitleClass} mt-6 mb-2.5 flex items-center gap-1.5 select-none">
+              <span class="w-2 h-2 rounded-full ${sectionDotClass}"></span>
               <span>${escapeHtml(line.trim())}</span>
             </div>
           `);
@@ -1080,7 +1450,7 @@ import Layout from '../layouts/Layout.astro';
           }
 
           if (isChordToken(token)) {
-            currentChord = transposeChord(token, currentTranspose);
+            currentChord = transposeChord(token, transpose);
           } else {
             // Etiqueta que no es acorde musical
             units.push({
@@ -1102,10 +1472,10 @@ import Layout from '../layouts/Layout.astro';
 
         const hasChordsInLine = units.some(u => u.chord);
 
-        if (!hasChordsInLine || !showChords) {
+        if (!hasChordsInLine || !withChords) {
           // Línea limpia sin acordes
           const cleanLineText = units.map(u => escapeHtml(u.text)).join('');
-          htmlLines.push(`<div class="my-1 leading-relaxed text-zinc-800">${cleanLineText || '&nbsp;'}</div>`);
+          htmlLines.push(`<div class="my-1.5 leading-relaxed ${lyricTextColor}">${cleanLineText || '&nbsp;'}</div>`);
         } else {
           // 1. Caso especial: Línea exclusivamente de acordes (instrumental, intro, interludio, solo)
           const isChordOnlyLine = hasChordsInLine && units.every(u => !u.text || /^[|\/\-.\s]*$/.test(u.text));
@@ -1113,16 +1483,16 @@ import Layout from '../layouts/Layout.astro';
           if (isChordOnlyLine) {
             const chordRowHtml = units.map(u => {
               const chordHtml = u.chord 
-                ? `<span class="chord-tag font-mono font-bold text-[0.88em] text-blue-600 bg-blue-50/70 px-2.5 py-0.5 rounded-md border border-blue-200/60 select-all shadow-2xs">${escapeHtml(u.chord)}</span>` 
+                ? `<span class="chord-tag font-mono font-bold text-[0.88em] ${chordBoxClass} px-2.5 py-0.5 rounded-md border select-all shadow-2xs">${escapeHtml(u.chord)}</span>` 
                 : '';
               const sep = u.text ? escapeHtml(u.text) : '';
-              const sepHtml = sep.trim() ? `<span class="text-zinc-400 font-mono px-1 select-none">${sep}</span>` : (sep ? `<span class="inline-block w-3"></span>` : '');
+              const sepHtml = sep.trim() ? `<span class="text-zinc-500 font-mono px-1 select-none">${sep}</span>` : (sep ? `<span class="inline-block w-3"></span>` : '');
               return `${chordHtml}${sepHtml}`;
             }).join('');
 
             htmlLines.push(`
-              <div class="chord-only-line flex flex-wrap items-center gap-2 my-2 py-1.5 px-3 rounded-lg bg-zinc-100/70 border border-zinc-200/80">
-                <span class="text-[10px] font-bold text-zinc-400 select-none mr-1 font-mono tracking-wider">和弦:</span>
+              <div class="chord-only-line flex flex-wrap items-center gap-2 my-2.5 py-2 px-3 rounded-lg ${chordRowBoxClass} border">
+                <span class="text-[10px] font-bold text-zinc-500 select-none mr-1 font-mono tracking-wider">和弦:</span>
                 ${chordRowHtml}
               </div>
             `);
@@ -1132,22 +1502,29 @@ import Layout from '../layouts/Layout.astro';
           // 2. Línea regular con letra y acordes alineados sobre cada sílaba
           const unitsHtml = units.map(u => {
             const chordHtml = u.chord 
-              ? `<span class="chord-tag font-mono font-bold text-[0.82em] text-blue-600 leading-none mb-1 select-all">${escapeHtml(u.chord)}</span>` 
+              ? `<span class="chord-tag font-mono font-bold text-[0.82em] ${chordTextColor} leading-none mb-1 select-all">${escapeHtml(u.chord)}</span>` 
               : `<span class="chord-tag font-mono text-[0.82em] leading-none mb-1 opacity-0 select-none">&nbsp;</span>`;
             const textHtml = escapeHtml(u.text) || '&nbsp;';
             return `
-              <span class="inline-flex flex-col items-start align-bottom mr-1 mb-1.5">
+              <span class="inline-flex flex-col items-start align-bottom mr-1 mb-2">
                 ${chordHtml}
-                <span class="lyric-syllable leading-normal text-zinc-900 whitespace-pre min-h-[1.25em]">${textHtml}</span>
+                <span class="lyric-syllable leading-normal ${lyricTextColor} whitespace-pre min-h-[1.25em]">${textHtml}</span>
               </span>
             `;
           }).join('');
 
-          htmlLines.push(`<div class="chord-line flex flex-wrap items-end my-0.5">${unitsHtml}</div>`);
+          htmlLines.push(`<div class="chord-line flex flex-wrap items-end my-1">${unitsHtml}</div>`);
         }
       }
 
-      detailLyricsContainer.innerHTML = htmlLines.join('');
+      return htmlLines.join('');
+    }
+
+    function renderLyricsSheet() {
+      if (!detailLyricsContainer || !activeSong) return;
+      detailLyricsContainer.style.fontSize = `${currentFontSize}px`;
+      updateTransposeStatusUI();
+      detailLyricsContainer.innerHTML = generateLyricsHtml(activeSong.letra || '', currentTranspose, showChords, false);
     }
 
     // 4. Abrir Modal de Detalle
@@ -1695,7 +2072,701 @@ import Layout from '../layouts/Layout.astro';
       }
     });
 
+    // =============================================================
+    // 6. GESTIÓN DE CARPETAS / LISTAS DE CULTO (SETLISTS)
+    // =============================================================
+    const tabNavLibrary = document.getElementById('tab-nav-library');
+    const tabNavSetlists = document.getElementById('tab-nav-setlists');
+    const viewLibrary = document.getElementById('view-library');
+    const viewSetlists = document.getElementById('view-setlists');
+    const setlistBadgeCount = document.getElementById('setlist-badge-count');
+    const setlistsGrid = document.getElementById('setlists-grid');
+    const setlistsEmpty = document.getElementById('setlists-empty');
+    const btnOpenCreateSetlist = document.getElementById('btn-open-create-setlist');
+
+    // Modales de Setlist
+    const modalSetlistForm = document.getElementById('modal-setlist-form');
+    const btnCloseSetlistForm = document.getElementById('btn-close-setlist-form');
+    const btnCancelSetlistForm = document.getElementById('btn-cancel-setlist-form');
+    const formSetlist = document.getElementById('form-setlist');
+    const inputSetlistId = document.getElementById('input-setlist-id');
+    const inputSetlistName = document.getElementById('input-setlist-name');
+    const inputSetlistDate = document.getElementById('input-setlist-date');
+    const inputSetlistNotes = document.getElementById('input-setlist-notes');
+    const setlistSongsPicker = document.getElementById('setlist-songs-picker');
+    const setlistSelectedCount = document.getElementById('setlist-selected-count');
+    const setlistErrorMsg = document.getElementById('setlist-error-msg');
+    const btnSubmitSetlist = document.getElementById('btn-submit-setlist');
+
+    // Alternar vistas: Biblioteca vs Carpetas de Culto
+    tabNavLibrary?.addEventListener('click', () => {
+      viewLibrary?.classList.remove('hidden');
+      viewSetlists?.classList.add('hidden');
+      tabNavLibrary.className = "py-3 px-4 border-b-2 border-zinc-950 font-bold text-zinc-950 flex items-center gap-2 transition-all";
+      tabNavSetlists.className = "py-3 px-4 border-b-2 border-transparent font-medium text-zinc-500 hover:text-zinc-950 flex items-center gap-2 transition-all";
+    });
+
+    tabNavSetlists?.addEventListener('click', () => {
+      viewSetlists?.classList.remove('hidden');
+      viewLibrary?.classList.add('hidden');
+      tabNavSetlists.className = "py-3 px-4 border-b-2 border-zinc-950 font-bold text-zinc-950 flex items-center gap-2 transition-all";
+      tabNavLibrary.className = "py-3 px-4 border-b-2 border-transparent font-medium text-zinc-500 hover:text-zinc-950 flex items-center gap-2 transition-all";
+    });
+
+    // Cargar Setlists desde Firestore (con fallback local)
+    function loadSetlists() {
+      try {
+        const setlistCol = collection(db, 'setlists');
+        const q = query(setlistCol, orderBy('fecha', 'desc'));
+
+        onSnapshot(q, (snapshot) => {
+          if (!snapshot.empty) {
+            currentSetlists = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }));
+          } else {
+            currentSetlists = [...sampleSetlists];
+          }
+          renderSetlists();
+        }, (err) => {
+          console.warn("Firestore setlists fallback a muestra inicial:", err);
+          currentSetlists = [...sampleSetlists];
+          renderSetlists();
+        });
+      } catch (err) {
+        console.warn("Error conectando a Firestore setlists:", err);
+        currentSetlists = [...sampleSetlists];
+        renderSetlists();
+      }
+    }
+
+    // Renderizar tarjetas de Setlist
+    function renderSetlists() {
+      if (setlistBadgeCount) {
+        setlistBadgeCount.textContent = currentSetlists.length;
+      }
+
+      if (!setlistsGrid || !setlistsEmpty) return;
+
+      if (currentSetlists.length === 0) {
+        setlistsGrid.classList.add('hidden');
+        setlistsEmpty.classList.remove('hidden');
+        return;
+      }
+
+      setlistsEmpty.classList.add('hidden');
+      setlistsGrid.classList.remove('hidden');
+      setlistsGrid.innerHTML = '';
+
+      const allAvailableSongs = currentSongs.length > 0 ? currentSongs : sampleSongs;
+
+      currentSetlists.forEach(setlist => {
+        const card = document.createElement('div');
+        card.className = "rounded-2xl p-6 bg-white border border-zinc-200 hover:border-zinc-950 hover:shadow-lg transition-all flex flex-col justify-between";
+
+        const songItemsHtml = (setlist.songs || []).map((item, idx) => {
+          const s = allAvailableSongs.find(x => x.id === item.songId) || { titulo: "未知诗歌", tono: "" };
+          return `
+            <li class="flex items-center justify-between py-2 border-b border-zinc-100 last:border-0 text-xs">
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-zinc-100 text-zinc-600 font-mono font-bold flex items-center justify-center text-[10px]">${idx + 1}</span>
+                <span class="font-bold text-zinc-900">${escapeHtml(s.titulo)}</span>
+                ${s.tono ? `<span class="text-zinc-400 font-mono text-[10.5px]">(${escapeHtml(s.tono)})</span>` : ''}
+              </div>
+              <span class="font-mono text-zinc-500 font-medium text-[11px] bg-zinc-50 px-2 py-0.5 rounded border border-zinc-200/60">
+                ${item.bpm || 120} BPM
+              </span>
+            </li>
+          `;
+        }).join('');
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-zinc-900 text-white">
+                📅 ${escapeHtml(setlist.fecha || '主日敬拜')}
+              </span>
+              <span class="text-xs text-zinc-500 font-medium">
+                共 ${setlist.songs?.length || 0} 首诗歌
+              </span>
+            </div>
+
+            <h3 class="font-extrabold text-lg text-zinc-950 mb-1">
+              ${escapeHtml(setlist.titulo)}
+            </h3>
+
+            ${setlist.notas ? `<p class="text-xs text-zinc-500 mb-4">${escapeHtml(setlist.notas)}</p>` : '<div class="mb-4"></div>'}
+
+            <div class="bg-zinc-50 rounded-xl p-3 border border-zinc-200/70 mb-5">
+              <ul class="space-y-0.5">
+                ${songItemsHtml || '<li class="text-zinc-400 text-center py-2 text-xs">暂无选入诗歌</li>'}
+              </ul>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-zinc-100 flex items-center justify-between gap-2">
+            <button type="button" data-action="stage" class="flex-grow py-2.5 px-4 rounded-xl bg-zinc-950 text-white font-bold text-xs hover:bg-zinc-800 transition-colors shadow-xs flex items-center justify-center gap-2">
+              <span>🎙️</span>
+              <span>进入大屏演练 (Modo Culto)</span>
+            </button>
+            <button type="button" data-action="edit" class="p-2.5 rounded-xl border border-zinc-200 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100 transition-colors" title="修改歌单">
+              ✏️
+            </button>
+            <button type="button" data-action="delete" class="p-2.5 rounded-xl border border-zinc-200 text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors" title="删除歌单">
+              🗑️
+            </button>
+          </div>
+        `;
+
+        card.querySelector('[data-action="stage"]')?.addEventListener('click', () => {
+          openStageMode(setlist, 0);
+        });
+
+        card.querySelector('[data-action="edit"]')?.addEventListener('click', () => {
+          openSetlistFormModal(setlist);
+        });
+
+        card.querySelector('[data-action="delete"]')?.addEventListener('click', async () => {
+          const confirmDelete = confirm(`确定要删除敬拜歌单《${setlist.titulo}》吗？`);
+          if (!confirmDelete) return;
+
+          try {
+            if (setlist.id.startsWith('seed-')) {
+              currentSetlists = currentSetlists.filter(s => s.id !== setlist.id);
+              renderSetlists();
+            } else {
+              await deleteDoc(doc(db, 'setlists', setlist.id));
+            }
+          } catch (err) {
+            console.error("Error al eliminar setlist:", err);
+            alert("删除失败，请检查 Firestore 规则权限。");
+          }
+        });
+
+        setlistsGrid.appendChild(card);
+      });
+    }
+
+    // Modal Crear / Editar Setlist
+    function openSetlistFormModal(setlistToEdit = null) {
+      setlistErrorMsg?.classList.add('hidden');
+
+      if (setlistToEdit) {
+        document.getElementById('modal-setlist-title').textContent = `编辑敬拜歌单：《${setlistToEdit.titulo}》`;
+        inputSetlistId.value = setlistToEdit.id;
+        inputSetlistName.value = setlistToEdit.titulo || '';
+        inputSetlistDate.value = setlistToEdit.fecha || '';
+        inputSetlistNotes.value = setlistToEdit.notas || '';
+      } else {
+        document.getElementById('modal-setlist-title').textContent = '新建敬拜歌单';
+        inputSetlistId.value = '';
+        const today = new Date().toISOString().split('T')[0];
+        inputSetlistDate.value = today;
+        inputSetlistName.value = `${today} 主日敬拜`;
+        inputSetlistNotes.value = '主领: 敬拜团';
+      }
+
+      setlistSongsPicker.innerHTML = '';
+      const selectedMap = new Map();
+      if (setlistToEdit && setlistToEdit.songs) {
+        setlistToEdit.songs.forEach(item => selectedMap.set(item.songId, item.bpm || 120));
+      }
+
+      const allAvailableSongs = currentSongs.length > 0 ? currentSongs : sampleSongs;
+
+      allAvailableSongs.forEach(song => {
+        const isChecked = selectedMap.has(song.id);
+        const existingBpm = selectedMap.get(song.id) || 120;
+
+        const row = document.createElement('div');
+        row.className = "p-3 flex items-center justify-between gap-3 hover:bg-zinc-100/60 transition-colors";
+        row.innerHTML = `
+          <label class="flex items-center gap-2.5 cursor-pointer flex-grow select-none">
+            <input type="checkbox" data-song-id="${song.id}" class="setlist-song-check rounded border-zinc-300 text-zinc-950 focus:ring-0 w-4 h-4 cursor-pointer" ${isChecked ? 'checked' : ''} />
+            <div>
+              <span class="font-bold text-zinc-900 text-xs">${escapeHtml(song.titulo)}</span>
+              <span class="text-[10.5px] text-zinc-400 block">${song.categoria || '诗歌'} · ${song.tono || '调号未定'}</span>
+            </div>
+          </label>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <span class="text-[10px] text-zinc-400">BPM</span>
+            <input type="number" min="40" max="250" value="${existingBpm}" data-bpm-for="${song.id}" class="w-16 px-2 py-1 rounded border border-zinc-200 text-xs font-mono text-center bg-white" />
+          </div>
+        `;
+        setlistSongsPicker.appendChild(row);
+      });
+
+      const updateSelectedCount = () => {
+        const checks = setlistSongsPicker.querySelectorAll('.setlist-song-check:checked');
+        if (setlistSelectedCount) setlistSelectedCount.textContent = checks.length;
+      };
+      setlistSongsPicker.addEventListener('change', updateSelectedCount);
+      updateSelectedCount();
+
+      modalSetlistForm?.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    const closeSetlistModal = () => {
+      modalSetlistForm?.classList.add('hidden');
+      document.body.style.overflow = '';
+      formSetlist.reset();
+      setlistErrorMsg?.classList.add('hidden');
+    };
+
+    btnOpenCreateSetlist?.addEventListener('click', () => openSetlistFormModal(null));
+    btnCloseSetlistForm?.addEventListener('click', closeSetlistModal);
+    btnCancelSetlistForm?.addEventListener('click', closeSetlistModal);
+
+    // Guardar Setlist en Firestore
+    formSetlist?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const checkedBoxes = setlistSongsPicker.querySelectorAll('.setlist-song-check:checked');
+      if (checkedBoxes.length === 0) {
+        setlistErrorMsg.textContent = '请至少勾选 1 首诗歌加入敬拜歌单。';
+        setlistErrorMsg.classList.remove('hidden');
+        return;
+      }
+
+      const selectedSongs = [];
+      checkedBoxes.forEach(box => {
+        const songId = box.getAttribute('data-song-id');
+        const bpmInput = setlistSongsPicker.querySelector(`input[data-bpm-for="${songId}"]`);
+        const bpm = bpmInput ? parseInt(bpmInput.value) || 120 : 120;
+        selectedSongs.push({ songId, bpm });
+      });
+
+      const editId = inputSetlistId.value;
+      const setlistData = {
+        titulo: inputSetlistName.value.trim(),
+        fecha: inputSetlistDate.value,
+        notas: inputSetlistNotes.value.trim(),
+        songs: selectedSongs
+      };
+
+      btnSubmitSetlist.disabled = true;
+      btnSubmitSetlist.textContent = '正在保存...';
+
+      try {
+        if (!editId) {
+          await addDoc(collection(db, 'setlists'), {
+            ...setlistData,
+            createdAt: serverTimestamp()
+          });
+        } else if (editId.startsWith('seed-')) {
+          await addDoc(collection(db, 'setlists'), {
+            ...setlistData,
+            createdAt: serverTimestamp()
+          });
+          currentSetlists = currentSetlists.filter(s => s.id !== editId);
+        } else {
+          const docRef = doc(db, 'setlists', editId);
+          await updateDoc(docRef, {
+            ...setlistData,
+            updatedAt: serverTimestamp()
+          });
+        }
+
+        closeSetlistModal();
+      } catch (err) {
+        console.error("Error al guardar setlist:", err);
+        setlistErrorMsg.textContent = `保存失败 (${err.code || '权限受限'})：请检查 Firestore 规则。`;
+        setlistErrorMsg.classList.remove('hidden');
+      } finally {
+        btnSubmitSetlist.disabled = false;
+        btnSubmitSetlist.textContent = '保存敬拜歌单';
+      }
+    });
+
+    // =============================================================
+    // 7. PANTALLA COMPLETA: MODO ESCENARIO / EN VIVO Y METRÓNOMO
+    // =============================================================
+    const stageModeView = document.getElementById('stage-mode-view');
+    const stageHeader = document.getElementById('stage-header');
+    const stageFooter = document.getElementById('stage-footer');
+    const btnExitStage = document.getElementById('btn-exit-stage');
+    const stageSetlistTitle = document.getElementById('stage-setlist-title');
+    const stageSongCounter = document.getElementById('stage-song-counter');
+    const stageSongPills = document.getElementById('stage-song-pills');
+
+    // Metrónomo en vivo
+    const stageMetronomeLed = document.getElementById('stage-metronome-led');
+    const stageBpmDisplay = document.getElementById('stage-bpm-display');
+    const btnBpmDec = document.getElementById('btn-bpm-dec');
+    const btnBpmInc = document.getElementById('btn-bpm-inc');
+    const btnStageMetronomeToggle = document.getElementById('btn-stage-metronome-toggle');
+    const btnStageMetronomeTap = document.getElementById('btn-stage-metronome-tap');
+    const btnStageMetronomeSound = document.getElementById('btn-stage-metronome-sound');
+
+    // Tono, Fuente, Tema y Vistas
+    const btnStageTransDown = document.getElementById('btn-stage-trans-down');
+    const btnStageTransUp = document.getElementById('btn-stage-trans-up');
+    const stageToneDisplay = document.getElementById('stage-tone-display');
+    const btnStageFontDec = document.getElementById('btn-stage-font-dec');
+    const btnStageFontInc = document.getElementById('btn-stage-font-inc');
+    const btnStageThemeToggle = document.getElementById('btn-stage-theme-toggle');
+    const btnStageViewChords = document.getElementById('btn-stage-view-chords');
+    const btnStageViewJianpu = document.getElementById('btn-stage-view-jianpu');
+
+    // Contenido de Escenario
+    const stageContentChords = document.getElementById('stage-content-chords');
+    const stageContentJianpu = document.getElementById('stage-content-jianpu');
+    const stageSongTitle = document.getElementById('stage-song-title');
+    const stageSongSubtitle = document.getElementById('stage-song-subtitle');
+    const stageLyricsBody = document.getElementById('stage-lyrics-body');
+    const stageJianpuImg = document.getElementById('stage-jianpu-img');
+    const stageJianpuNone = document.getElementById('stage-jianpu-none');
+
+    // Navegación de Escenario
+    const btnStagePrev = document.getElementById('btn-stage-prev');
+    const btnStageNext = document.getElementById('btn-stage-next');
+    const btnEnterStageSingle = document.getElementById('btn-enter-stage-single');
+
+    // Sincronización del LED con el pulso del metrónomo
+    metronome.onTick = (beatIndex, isFirst) => {
+      if (!stageMetronomeLed) return;
+      if (beatIndex === -1) {
+        stageMetronomeLed.className = isStageDarkMode
+          ? "w-3 h-3 rounded-full bg-zinc-700 transition-all shadow-xs"
+          : "w-3 h-3 rounded-full bg-zinc-300 transition-all shadow-xs";
+        return;
+      }
+
+      if (isFirst) {
+        stageMetronomeLed.className = "w-3 h-3 rounded-full bg-emerald-400 scale-125 shadow-md shadow-emerald-500/60 transition-all duration-75";
+      } else {
+        stageMetronomeLed.className = "w-3 h-3 rounded-full bg-blue-400 scale-110 shadow-sm shadow-blue-500/60 transition-all duration-75";
+      }
+
+      setTimeout(() => {
+        if (metronome.isPlaying) {
+          stageMetronomeLed.className = isStageDarkMode
+            ? "w-3 h-3 rounded-full bg-zinc-700 transition-all duration-100"
+            : "w-3 h-3 rounded-full bg-zinc-300 transition-all duration-100";
+        }
+      }, 90);
+    };
+
+    // Botón Play / Pausa del Metrónomo
+    btnStageMetronomeToggle?.addEventListener('click', () => {
+      if (metronome.isPlaying) {
+        metronome.stop();
+        btnStageMetronomeToggle.innerHTML = '▶ 节拍';
+        btnStageMetronomeToggle.className = isStageDarkMode
+          ? "px-2 py-0.5 rounded bg-zinc-800 text-white font-bold text-xs hover:bg-zinc-700 transition-colors"
+          : "px-2 py-0.5 rounded bg-zinc-950 text-white font-bold text-xs hover:bg-zinc-800 transition-colors";
+      } else {
+        metronome.start();
+        btnStageMetronomeToggle.innerHTML = '⏸ 停止';
+        btnStageMetronomeToggle.className = "px-2 py-0.5 rounded bg-red-600 text-white font-bold text-xs hover:bg-red-700 transition-colors";
+      }
+    });
+
+    // Tap Tempo
+    btnStageMetronomeTap?.addEventListener('click', () => {
+      metronome.tap();
+      if (stageBpmDisplay) stageBpmDisplay.textContent = metronome.bpm;
+      btnStageMetronomeTap.classList.add('bg-zinc-300');
+      setTimeout(() => btnStageMetronomeTap.classList.remove('bg-zinc-300'), 120);
+    });
+
+    // Control BPM +/-
+    btnBpmInc?.addEventListener('click', () => {
+      metronome.setBpm(metronome.bpm + 1);
+      if (stageBpmDisplay) stageBpmDisplay.textContent = metronome.bpm;
+    });
+
+    btnBpmDec?.addEventListener('click', () => {
+      metronome.setBpm(metronome.bpm - 1);
+      if (stageBpmDisplay) stageBpmDisplay.textContent = metronome.bpm;
+    });
+
+    // Sonido Metrónomo On / Off
+    btnStageMetronomeSound?.addEventListener('click', () => {
+      metronome.soundEnabled = !metronome.soundEnabled;
+      btnStageMetronomeSound.textContent = metronome.soundEnabled ? '🔊' : '🔇';
+      btnStageMetronomeSound.title = metronome.soundEnabled ? '声音已开启' : '已静音 (仅视觉闪烁)';
+    });
+
+    // Abrir Modo Escenario
+    function openStageMode(setlistOrSong, initialIndex = 0) {
+      if (setlistOrSong.songs) {
+        activeSetlist = setlistOrSong;
+      } else {
+        activeSetlist = {
+          id: `temp-${setlistOrSong.id}`,
+          titulo: `单曲演练：《${setlistOrSong.titulo}》`,
+          songs: [{ songId: setlistOrSong.id, bpm: 120 }]
+        };
+      }
+
+      currentStageIndex = initialIndex;
+      stageCurrentTranspose = 0;
+      stageView = 'chords';
+
+      stageContentChords?.classList.remove('hidden');
+      stageContentJianpu?.classList.add('hidden');
+
+      stageModeView?.classList.remove('hidden');
+      stageModeView?.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+
+      applyStageTheme();
+    }
+
+    // Salir del Modo Escenario
+    btnExitStage?.addEventListener('click', () => {
+      metronome.stop();
+      if (btnStageMetronomeToggle) {
+        btnStageMetronomeToggle.innerHTML = '▶ 节拍';
+        btnStageMetronomeToggle.className = isStageDarkMode
+          ? "px-2 py-0.5 rounded bg-zinc-800 text-white font-bold text-xs hover:bg-zinc-700 transition-colors"
+          : "px-2 py-0.5 rounded bg-zinc-950 text-white font-bold text-xs hover:bg-zinc-800 transition-colors";
+      }
+      stageModeView?.classList.add('hidden');
+      stageModeView?.classList.remove('flex');
+      document.body.style.overflow = '';
+    });
+
+    // Desde Modal Detalle -> Entrar a Escenario con la canción activa
+    btnEnterStageSingle?.addEventListener('click', () => {
+      if (!activeSong) return;
+      modalDetail.classList.add('hidden');
+      document.body.style.overflow = '';
+      openStageMode(activeSong, 0);
+    });
+
+    // Renderizar la Canción Activa en el Gran Escenario
+    function renderStageSong() {
+      if (!activeSetlist || !activeSetlist.songs || activeSetlist.songs.length === 0) return;
+      if (currentStageIndex < 0) currentStageIndex = 0;
+      if (currentStageIndex >= activeSetlist.songs.length) currentStageIndex = activeSetlist.songs.length - 1;
+
+      const currentItem = activeSetlist.songs[currentStageIndex];
+      const allAvailableSongs = currentSongs.length > 0 ? currentSongs : sampleSongs;
+      const song = allAvailableSongs.find(s => s.id === currentItem.songId) || {
+        id: currentItem.songId,
+        titulo: "未知诗歌",
+        letra: "",
+        tono: ""
+      };
+
+      // Ajustar métrica del metrónomo (3/4 vs 4/4)
+      if (song.tono && /3\/4|3拍/i.test(song.tono)) {
+        metronome.beatsPerBar = 3;
+      } else if (song.tono && /6\/8|6拍/i.test(song.tono)) {
+        metronome.beatsPerBar = 6;
+      } else {
+        metronome.beatsPerBar = 4;
+      }
+
+      // Sincronizar BPM objetivo
+      let songBpm = currentItem.bpm;
+      if (!songBpm) {
+        const bpmMatch = (song.tono || '').match(/(\d{2,3})\s*(?:bpm|拍)/i);
+        songBpm = bpmMatch ? parseInt(bpmMatch[1]) : 120;
+      }
+      metronome.setBpm(songBpm);
+      if (stageBpmDisplay) stageBpmDisplay.textContent = metronome.bpm;
+
+      // Encabezado
+      if (stageSetlistTitle) stageSetlistTitle.textContent = activeSetlist.titulo;
+      if (stageSongCounter) stageSongCounter.textContent = `第 ${currentStageIndex + 1} / ${activeSetlist.songs.length} 首`;
+
+      // Píldoras de navegación rápida entre canciones
+      if (stageSongPills) {
+        stageSongPills.innerHTML = activeSetlist.songs.map((item, idx) => {
+          const s = allAvailableSongs.find(x => x.id === item.songId) || { titulo: `歌曲 ${idx + 1}` };
+          const isActive = idx === currentStageIndex;
+          const pillClass = isActive
+            ? (isStageDarkMode ? 'bg-amber-400 text-zinc-950 font-bold' : 'bg-zinc-950 text-white font-bold')
+            : (isStageDarkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200');
+          return `<button type="button" data-stage-idx="${idx}" class="whitespace-nowrap px-3 py-1.5 rounded-lg text-xs transition-colors shadow-2xs flex items-center gap-1 ${pillClass}">
+            <span class="opacity-70">${idx + 1}.</span>
+            <span class="truncate max-w-[120px] sm:max-w-[180px]">${escapeHtml(s.titulo)}</span>
+          </button>`;
+        }).join('');
+
+        stageSongPills.querySelectorAll('button').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const idx = parseInt(btn.getAttribute('data-stage-idx'));
+            if (!isNaN(idx) && idx !== currentStageIndex) {
+              currentStageIndex = idx;
+              stageCurrentTranspose = 0;
+              renderStageSong();
+            }
+          });
+        });
+      }
+
+      // Título y Tonalidad en Escenario
+      if (stageSongTitle) stageSongTitle.textContent = song.titulo;
+
+      let noteName = null;
+      if (song.tono) {
+        const match = song.tono.match(/(?:1\s*=\s*)?([A-G][#b]?)/i);
+        if (match) noteName = match[1].toUpperCase();
+      }
+
+      let toneText = song.tono || '原调';
+      if (stageCurrentTranspose !== 0) {
+        const sign = stageCurrentTranspose > 0 ? `+${stageCurrentTranspose}` : `${stageCurrentTranspose}`;
+        const transposedKey = noteName ? transposeNote(noteName, stageCurrentTranspose) : '';
+        toneText = transposedKey ? `${toneText} [变调 ${sign} -> 1=${transposedKey}]` : `${toneText} [变调 ${sign}]`;
+        if (stageToneDisplay) stageToneDisplay.textContent = transposedKey ? `1=${transposedKey}` : sign;
+      } else {
+        if (stageToneDisplay) stageToneDisplay.textContent = noteName ? `1=${noteName}` : '原调';
+      }
+
+      if (stageSongSubtitle) {
+        stageSongSubtitle.textContent = `${song.categoria || '诗歌'} · 调号: ${toneText} · 节拍: ${metronome.beatsPerBar}/4 · 速度: ${metronome.bpm} BPM`;
+      }
+
+      // Renderizar Letra Gigante con Acordes
+      if (stageLyricsBody) {
+        stageLyricsBody.style.fontSize = `${stageFontSize}px`;
+        stageLyricsBody.innerHTML = generateLyricsHtml(song.letra || '', stageCurrentTranspose, true, isStageDarkMode);
+      }
+
+      // 简谱 Tab
+      if (stageJianpuImg && stageJianpuNone) {
+        if (song.jianpuUrl) {
+          stageJianpuImg.src = song.jianpuUrl;
+          stageJianpuImg.classList.remove('hidden');
+          stageJianpuNone.classList.add('hidden');
+        } else {
+          stageJianpuImg.src = '';
+          stageJianpuImg.classList.add('hidden');
+          stageJianpuNone.classList.remove('hidden');
+        }
+      }
+
+      // Botones Anterior / Siguiente
+      if (btnStagePrev) {
+        btnStagePrev.disabled = (currentStageIndex === 0);
+        btnStagePrev.classList.toggle('opacity-30', currentStageIndex === 0);
+        btnStagePrev.classList.toggle('cursor-not-allowed', currentStageIndex === 0);
+      }
+      if (btnStageNext) {
+        btnStageNext.disabled = (currentStageIndex === activeSetlist.songs.length - 1);
+        btnStageNext.classList.toggle('opacity-30', currentStageIndex === activeSetlist.songs.length - 1);
+        btnStageNext.classList.toggle('cursor-not-allowed', currentStageIndex === activeSetlist.songs.length - 1);
+      }
+    }
+
+    // Botones Siguiente / Anterior de Escenario
+    btnStagePrev?.addEventListener('click', () => {
+      if (currentStageIndex > 0) {
+        currentStageIndex--;
+        stageCurrentTranspose = 0;
+        renderStageSong();
+      }
+    });
+
+    btnStageNext?.addEventListener('click', () => {
+      if (activeSetlist && currentStageIndex < activeSetlist.songs.length - 1) {
+        currentStageIndex++;
+        stageCurrentTranspose = 0;
+        renderStageSong();
+      }
+    });
+
+    // Controles de Transposición en Escenario
+    btnStageTransUp?.addEventListener('click', () => {
+      stageCurrentTranspose++;
+      if (stageCurrentTranspose > 11) stageCurrentTranspose = 0;
+      renderStageSong();
+    });
+
+    btnStageTransDown?.addEventListener('click', () => {
+      stageCurrentTranspose--;
+      if (stageCurrentTranspose < -11) stageCurrentTranspose = 0;
+      renderStageSong();
+    });
+
+    // Control de Tamaño de Letra en Escenario
+    btnStageFontInc?.addEventListener('click', () => {
+      if (stageFontSize < 48) {
+        stageFontSize += 3;
+        if (stageLyricsBody) stageLyricsBody.style.fontSize = `${stageFontSize}px`;
+      }
+    });
+
+    btnStageFontDec?.addEventListener('click', () => {
+      if (stageFontSize > 16) {
+        stageFontSize -= 3;
+        if (stageLyricsBody) stageLyricsBody.style.fontSize = `${stageFontSize}px`;
+      }
+    });
+
+    // Alternar Vista: Acordes vs 简谱 en Escenario
+    btnStageViewChords?.addEventListener('click', () => {
+      stageView = 'chords';
+      stageContentChords?.classList.remove('hidden');
+      stageContentJianpu?.classList.add('hidden');
+      btnStageViewChords.className = isStageDarkMode
+        ? "px-2 py-0.5 rounded font-bold bg-zinc-800 text-white shadow-2xs"
+        : "px-2 py-0.5 rounded font-bold bg-white text-zinc-950 shadow-2xs";
+      btnStageViewJianpu.className = "px-2 py-0.5 rounded font-medium text-zinc-400 hover:text-zinc-200";
+    });
+
+    btnStageViewJianpu?.addEventListener('click', () => {
+      stageView = 'jianpu';
+      stageContentChords?.classList.add('hidden');
+      stageContentJianpu?.classList.remove('hidden');
+      btnStageViewJianpu.className = isStageDarkMode
+        ? "px-2 py-0.5 rounded font-bold bg-zinc-800 text-white shadow-2xs"
+        : "px-2 py-0.5 rounded font-bold bg-white text-zinc-950 shadow-2xs";
+      btnStageViewChords.className = "px-2 py-0.5 rounded font-medium text-zinc-400 hover:text-zinc-200";
+    });
+
+    // Tema Oscuro / Claro en Escenario
+    function applyStageTheme() {
+      if (isStageDarkMode) {
+        stageModeView.className = "fixed inset-0 z-50 bg-zinc-950 text-zinc-100 overflow-y-auto flex flex-col select-none transition-colors duration-200";
+        stageHeader.className = "sticky top-0 z-30 bg-zinc-900/95 backdrop-blur-md border-b border-zinc-800 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-md transition-colors text-zinc-200";
+        stageFooter.className = "border-t border-zinc-800 px-6 py-3 bg-zinc-900/90 flex items-center justify-between text-xs text-zinc-400 font-medium transition-colors";
+        btnStageThemeToggle.textContent = '☀️';
+        btnStageThemeToggle.title = '切换浅色舞台模式';
+      } else {
+        stageModeView.className = "fixed inset-0 z-50 bg-white text-zinc-950 overflow-y-auto flex flex-col select-none transition-colors duration-200";
+        stageHeader.className = "sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-zinc-200 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-xs transition-colors text-zinc-900";
+        stageFooter.className = "border-t border-zinc-200/80 px-6 py-3 bg-zinc-50/80 flex items-center justify-between text-xs text-zinc-500 font-medium transition-colors";
+        btnStageThemeToggle.textContent = '🌙';
+        btnStageThemeToggle.title = '切换深色舞台模式';
+      }
+      renderStageSong();
+    }
+
+    btnStageThemeToggle?.addEventListener('click', () => {
+      isStageDarkMode = !isStageDarkMode;
+      applyStageTheme();
+    });
+
+    // Atajos de Teclado para el Escenario
+    document.addEventListener('keydown', (e) => {
+      if (stageModeView && !stageModeView.classList.contains('hidden')) {
+        if (e.code === 'Space') {
+          e.preventDefault();
+          btnStageMetronomeToggle?.click();
+        } else if (e.code === 'ArrowRight' || e.code === 'KeyN') {
+          e.preventDefault();
+          btnStageNext?.click();
+        } else if (e.code === 'ArrowLeft' || e.code === 'KeyP') {
+          e.preventDefault();
+          btnStagePrev?.click();
+        } else if (e.code === 'Escape') {
+          e.preventDefault();
+          btnExitStage?.click();
+        }
+      }
+    });
+
     // Iniciar carga al cargar el DOM
-    document.addEventListener('DOMContentLoaded', loadSongs);
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSongs();
+      loadSetlists();
+    });
   </script>
 </Layout>

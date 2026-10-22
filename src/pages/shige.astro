@@ -177,19 +177,41 @@ import Layout from '../layouts/Layout.astro';
           </div>
         </div>
 
-        <!-- Pestaña 2: 歌词 (Letra estructurada) -->
-        <div id="tab-content-lyrics" class="space-y-4 hidden">
-          <!-- Control de tamaño de letra -->
-          <div class="flex items-center justify-between text-xs text-zinc-500 border-b border-zinc-100 pb-2">
-            <span>排版格式：依诗歌段落编排</span>
-            <div class="flex items-center gap-1">
-              <span>字号:</span>
-              <button id="btn-font-decrease" type="button" class="w-6 h-6 border border-zinc-200 rounded hover:bg-zinc-100 font-bold">-</button>
-              <button id="btn-font-increase" type="button" class="w-6 h-6 border border-zinc-200 rounded hover:bg-zinc-100 font-bold">+</button>
+        <!-- Pestaña 2: 歌词与和弦 (Letra estructurada y acordes) -->
+        <div id="tab-content-lyrics" class="space-y-3 hidden">
+          <!-- Barra de herramientas: Transposición, acordes y tamaño de fuente -->
+          <div class="p-3 bg-zinc-50 border border-zinc-200 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs">
+            <!-- Controles de Tonalidad / Transposición -->
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-zinc-700 flex items-center gap-1">
+                <span>🎸 变调:</span>
+              </span>
+              <div class="inline-flex items-center rounded-lg border border-zinc-300 bg-white shadow-2xs overflow-hidden">
+                <button id="btn-transpose-down" type="button" class="px-2.5 py-1 hover:bg-zinc-100 font-bold border-r border-zinc-200 text-zinc-800 transition-colors" title="降半音 (♭ -1)">♭ -1</button>
+                <span id="transpose-status" class="px-2.5 py-1 font-mono font-semibold text-zinc-700 min-w-[70px] text-center bg-zinc-50 select-none text-xs">原调 (0)</span>
+                <button id="btn-transpose-up" type="button" class="px-2.5 py-1 hover:bg-zinc-100 font-bold border-l border-zinc-200 text-zinc-800 transition-colors" title="升半音 (♯ +1)">♯ +1</button>
+              </div>
+              <button id="btn-transpose-reset" type="button" class="text-[11px] text-zinc-400 hover:text-zinc-900 underline px-1 py-0.5" title="恢复原调">复原</button>
+            </div>
+
+            <!-- Opciones de vista: Toggle acordes y tamaño de letra -->
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-1.5 cursor-pointer select-none text-zinc-700 font-medium">
+                <input type="checkbox" id="toggle-show-chords" checked class="rounded border-zinc-300 text-zinc-900 focus:ring-0 w-3.5 h-3.5" />
+                <span>显示和弦</span>
+              </label>
+              <div class="h-3.5 w-px bg-zinc-200"></div>
+              <div class="flex items-center gap-1 text-zinc-500">
+                <span>字号:</span>
+                <button id="btn-font-decrease" type="button" class="w-6 h-6 border border-zinc-200 rounded bg-white hover:bg-zinc-100 font-bold text-zinc-800">-</button>
+                <button id="btn-font-increase" type="button" class="w-6 h-6 border border-zinc-200 rounded bg-white hover:bg-zinc-100 font-bold text-zinc-800">+</button>
+              </div>
             </div>
           </div>
-          <!-- Contenedor de la letra -->
-          <pre id="detail-lyrics" class="font-sans text-base leading-relaxed text-zinc-800 whitespace-pre-wrap select-text bg-zinc-50 p-6 rounded-xl border border-zinc-200"></pre>
+
+          <!-- Contenedor interactivo de la letra con acordes -->
+          <div id="detail-lyrics-container" class="font-sans leading-relaxed text-zinc-800 select-text bg-zinc-50/60 p-5 sm:p-6 rounded-xl border border-zinc-200 min-h-[220px] overflow-x-auto">
+          </div>
         </div>
 
         <!-- Pestaña 3: 试听 / YouTube -->
@@ -276,8 +298,26 @@ import Layout from '../layouts/Layout.astro';
         </div>
 
         <div>
-          <label class="block font-semibold text-zinc-700 mb-1">完整歌词 / Letra estructurada por estrofas</label>
-          <textarea id="input-lyrics" rows="6" placeholder="输入诗歌各节歌词，段落之间空一行..." class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm font-sans"></textarea>
+          <label class="block font-semibold text-zinc-700 mb-1">完整歌词与和弦 / Letra estructurada y acordes</label>
+          
+          <!-- Guía de sintaxis ChordPro -->
+          <div class="mb-2 p-3 rounded-lg bg-zinc-50 border border-zinc-200 text-[11px] text-zinc-600 space-y-1.5">
+            <div class="flex items-center justify-between font-semibold text-zinc-900">
+              <span class="flex items-center gap-1">🎸 和弦标注格式 (ChordPro 语法提示)</span>
+              <span class="text-[10px] text-blue-600 font-mono font-bold">[C] [G/B] [Am]</span>
+            </div>
+            <p class="text-zinc-500 leading-normal">
+              在歌词字词<strong>前面</strong>加中括号标注和弦，系统会自动将和弦对齐在歌词上方并支持<strong>一键移调/变调</strong>：
+            </p>
+            <div class="font-mono text-zinc-800 bg-white p-2 rounded border border-zinc-200 text-[10.5px]">
+              [C]在无数的[G/B]黑夜里，我用[Am]泪水涂抹[Em]眼睛
+            </div>
+            <p class="text-zinc-400 text-[10px] leading-relaxed">
+              * 支持低音斜杠和弦如 <code class="font-bold text-zinc-700">G/B</code>、<code class="font-bold text-zinc-700">F#m7</code>、<code class="font-bold text-zinc-700">Csus4</code>。段落标题可用 <code class="font-bold text-zinc-700">【副歌】</code>。若无和弦亦可直接粘贴纯歌词。
+            </p>
+          </div>
+
+          <textarea id="input-lyrics" rows="7" placeholder="输入诗歌各节歌词，和弦用 [C] 标记在对应字词前面，段落之间空一行..." class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm font-sans"></textarea>
         </div>
 
         <div id="add-error-msg" class="text-red-600 text-xs hidden"></div>
@@ -295,7 +335,7 @@ import Layout from '../layouts/Layout.astro';
     import { db } from '../lib/firebase.js';
     import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
 
-    // Canciones semilla precargadas por si la base de datos acaba de iniciar
+    // Canciones semilla precargadas con sintaxis de acordes ChordPro [Acorde]
     const sampleSongs = [
       {
         id: "seed-1",
@@ -305,7 +345,7 @@ import Layout from '../layouts/Layout.astro';
         categoria: "敬拜赞美",
         jianpuUrl: "https://images.unsplash.com/photo-1507838153414-b4b713384a76?auto=format&fit=crop&w=1200&q=80",
         audioUrl: "https://www.youtube.com/watch?v=Xh0wJ2_zN7Q",
-        letra: "在无数的黑夜里，我用泪水涂抹我的眼睛\n在漫长的道路上，我用叹息抚平我的创痕\n在每一个梦醒的清晨，我渴望见到你的晨星\n在每一个日落的黄昏，我等候聆听你的声音\n\n【副歌】\n这一生最美的祝福，就是能认识主耶稣\n这一生最美的祝福，就是能信靠主耶稣\n走在高山深谷，祂会伴我同行\n我知道这是最美的祝福"
+        letra: "[D]在无数的[A/C#]黑夜里，我用[Bm]泪水涂抹[F#m]眼睛\n[G]在漫长的[D/F#]道路上，我用[Em]叹息抚平[A]创痕\n[D]在每一个梦醒的[A/C#]清晨，我[Bm]渴望见到你的[F#m]晨星\n[G]在每一个日落的[D/F#]黄昏，我[Em]等候聆听[A]你的声[D]音\n\n【副歌】\n[D]这一生最[A/C#]美的祝福，[Bm]就是能认[F#m]识主耶稣\n[G]这一生最[D/F#]美的祝福，[Em]就是能信[A]靠主耶稣\n[G]走在高山[A/G]深谷，[F#m]祂会伴我[Bm]同行\n我[Em]知道这是[A]最美的祝[D]福"
       },
       {
         id: "seed-2",
@@ -315,7 +355,7 @@ import Layout from '../layouts/Layout.astro';
         categoria: "经典圣诗",
         jianpuUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80",
         audioUrl: "https://www.youtube.com/watch?v=CDdvReNKKuk",
-        letra: "奇异恩典 何等甘甜 我罪已得赦免\n前我失丧 今被寻回 瞎眼今得看见\n\n如此恩典 启发我心 我心敬畏降服\n初信之时 即蒙恩惠 真是何等宝贵\n\n天上万民 围绕宝座 赞美直到永远\n同心颂扬 神奇异恩 歌声响彻云霄"
+        letra: "[G]奇异恩典 [C]何等甘[G]甜 我罪已[D]得赦免\n[G]前我失丧 [C]今被寻[G]回 瞎眼今[D]得看[G]见\n\n[G]如此恩典 [C]启发我[G]心 我心敬[D]畏降服\n[G]初信之时 [C]即蒙恩[G]惠 真是何[D]等宝[G]贵\n\n[G]天上万民 [C]围绕宝[G]座 赞美直[D]到永远\n[G]同心颂扬 [C]神奇异[G]恩 歌声响[D]彻云[G]霄"
       },
       {
         id: "seed-3",
@@ -325,7 +365,7 @@ import Layout from '../layouts/Layout.astro';
         categoria: "青年团契",
         jianpuUrl: "",
         audioUrl: "https://www.youtube.com/watch?v=hB9X8p6T48A",
-        letra: "无论是住在美丽的高山，常是躺卧在阴暗的幽谷\n当你抬起头，你将会发现，主已预备。\n\n【副歌】\n云上太阳它总不改变，毫无保留照耀每一个地方\n黑暗虽笼罩，但神永与你同在，祂的爱永不改变。"
+        letra: "[C]无论是住在[Em]美丽的高山，[F]常是躺卧在[G]阴暗的幽谷\n[C]当你抬起[Em]头，你[F]将会发[Dm]现，主[G]已预备。\n\n【副歌】\n[C]云上太阳它[Em]总不改变，[F]毫无保留照耀[G]每一个地方\n[C]黑暗虽笼[Em]罩，但[F]神永与你[G]同在，祂的[F]爱[G]永不改[C]变。"
       },
       {
         id: "seed-4",
@@ -335,7 +375,7 @@ import Layout from '../layouts/Layout.astro';
         categoria: "感恩奉献",
         jianpuUrl: "",
         audioUrl: "",
-        letra: "有时遇见苦难如同大风浪，有时忧伤失望几乎要灰心\n若是数算恩典样样都要数，必能叫你希奇感谢主恩深\n\n【副歌】\n主的恩典样样都要数，主的恩典都要记清楚\n主的恩典样样都要数，必能叫你希奇感谢主恩深"
+        letra: "[Eb]有时遇见苦难如同[Bb]大风浪，[Eb]有时忧伤失望几乎[Bb]要灰心\n[Eb]若是数算恩典样样[Ab]都要数，[Eb]必能叫你希奇[Bb]感谢主恩[Eb]深\n\n【副歌】\n[Eb]主的恩典样样都要数，[Bb]主的恩典都要记清楚\n[Eb]主的恩典样样都要[Ab]数，[Eb]必能叫你希奇[Bb]感谢主恩[Eb]深"
       }
     ];
 
@@ -344,6 +384,57 @@ import Layout from '../layouts/Layout.astro';
     let searchQuery = "";
     let activeSong = null;
     let currentFontSize = 16; // px
+    let currentTranspose = 0; // -11 a +11 semitonos
+    let showChords = true;
+
+    // Escalas cromáticas y mapeo para transposición
+    const CHROMATIC_SHARPS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const CHROMATIC_FLATS  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+    const NOTE_INDEX_MAP = {
+      'C': 0, 'B#': 0,
+      'C#': 1, 'DB': 1,
+      'D': 2,
+      'D#': 3, 'EB': 3,
+      'E': 4, 'FB': 4,
+      'F': 5, 'E#': 5,
+      'F#': 6, 'GB': 6,
+      'G': 7,
+      'G#': 8, 'AB': 8,
+      'A': 9,
+      'A#': 10, 'BB': 10,
+      'B': 11, 'CB': 11
+    };
+
+    function isChordToken(token) {
+      if (!token) return false;
+      const t = token.trim();
+      return /^[A-Ga-g][#b]?(?:m|maj|min|dim|aug|sus|add|\d|\+|-|\(|\)|b5|#5|b9|#9)*(?:\/[A-Ga-g][#b]?)?$/.test(t);
+    }
+
+    function transposeNote(note, shift, preferFlats = false) {
+      const upper = note.toUpperCase();
+      let idx = NOTE_INDEX_MAP[upper];
+      if (idx === undefined) return note;
+      let newIdx = (idx + shift) % 12;
+      if (newIdx < 0) newIdx += 12;
+      return preferFlats ? CHROMATIC_FLATS[newIdx] : CHROMATIC_SHARPS[newIdx];
+    }
+
+    function transposeChord(chordStr, shift) {
+      if (shift === 0) return chordStr;
+      const match = chordStr.match(/^([A-Ga-g][#b]?)([^/]*)(?:\/([A-Ga-g][#b]?))?$/);
+      if (!match) return chordStr;
+      const [_, root, modifier, bass] = match;
+      const preferFlats = root.toLowerCase().includes('b') || (bass && bass.toLowerCase().includes('b'));
+      const newRoot = transposeNote(root, shift, preferFlats);
+      const newBass = bass ? '/' + transposeNote(bass, shift, preferFlats) : '';
+      return `${newRoot}${modifier}${newBass}`;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
 
     const songsGrid = document.getElementById('songs-grid');
     const loadingSpinner = document.getElementById('loading-spinner');
@@ -368,10 +459,15 @@ import Layout from '../layouts/Layout.astro';
     const tabContentLyrics = document.getElementById('tab-content-lyrics');
     const tabContentAudio = document.getElementById('tab-content-audio');
 
-    // Botones de ajuste de letra
+    // Contenedores y botones del visor de acordes/letra
+    const detailLyricsContainer = document.getElementById('detail-lyrics-container');
+    const transposeStatus = document.getElementById('transpose-status');
+    const btnTransposeUp = document.getElementById('btn-transpose-up');
+    const btnTransposeDown = document.getElementById('btn-transpose-down');
+    const btnTransposeReset = document.getElementById('btn-transpose-reset');
+    const toggleShowChords = document.getElementById('toggle-show-chords');
     const btnFontInc = document.getElementById('btn-font-increase');
     const btnFontDec = document.getElementById('btn-font-decrease');
-    const detailLyrics = document.getElementById('detail-lyrics');
     const btnCopyLyrics = document.getElementById('btn-copy-lyrics');
 
     // Banner de muestra
@@ -467,8 +563,9 @@ import Layout from '../layouts/Layout.astro';
         const card = document.createElement('div');
         card.className = "rounded-xl p-5 bg-white border border-zinc-200 hover:border-zinc-950 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group";
         
-        // Primera estrofa como vista previa
-        const firstLines = (song.letra || '').split('\n').filter(l => l.trim() && !l.includes('【')).slice(0, 2).join(' / ');
+        // Vista previa de letra limpia (quitando etiquetas de acordes [C] para la tarjeta)
+        const cleanForPreview = (song.letra || '').replace(/\[[A-Ga-g][#b]?[^\]]*\]/g, '');
+        const firstLines = cleanForPreview.split('\n').filter(l => l.trim() && !l.includes('【')).slice(0, 2).join(' / ');
 
         card.innerHTML = `
           <div>
@@ -492,7 +589,7 @@ import Layout from '../layouts/Layout.astro';
           <div class="pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-400 mt-3">
             <div class="flex items-center gap-2">
               ${song.jianpuUrl ? '<span title="包含简谱">🎼 简谱</span>' : '<span class="text-zinc-300">🎼 简谱</span>'}
-              <span title="包含歌词">📜 歌词</span>
+              <span title="包含歌词与和弦">🎸 和弦歌词</span>
               ${song.audioUrl ? '<span title="包含音频">🎧 试听</span>' : ''}
             </div>
             <span class="text-zinc-950 font-semibold group-hover:translate-x-0.5 transition-transform">查阅 →</span>
@@ -504,9 +601,134 @@ import Layout from '../layouts/Layout.astro';
       });
     }
 
-    // 3. Abrir Modal de Detalle
+    // 3. Renderizar el visor de acordes y letras interactivo
+    function updateTransposeStatusUI() {
+      if (!transposeStatus) return;
+      
+      let noteName = null;
+      if (activeSong?.tono) {
+        const match = activeSong.tono.match(/(?:1\s*=\s*)?([A-G][#b]?)/i);
+        if (match) noteName = match[1].toUpperCase();
+      }
+
+      if (currentTranspose === 0) {
+        transposeStatus.textContent = noteName ? `原调 (${noteName})` : '原调 (0)';
+        transposeStatus.className = "px-2.5 py-1 font-mono font-semibold text-zinc-700 min-w-[70px] text-center bg-zinc-50 select-none text-xs";
+      } else {
+        const sign = currentTranspose > 0 ? `+${currentTranspose}` : `${currentTranspose}`;
+        const transposedKey = noteName ? transposeNote(noteName, currentTranspose) : '';
+        transposeStatus.textContent = transposedKey ? `${sign} (${transposedKey})` : sign;
+        transposeStatus.className = "px-2.5 py-1 font-mono font-bold text-blue-700 min-w-[70px] text-center bg-blue-50/70 select-none text-xs";
+      }
+    }
+
+    function renderLyricsSheet() {
+      if (!detailLyricsContainer || !activeSong) return;
+
+      detailLyricsContainer.style.fontSize = `${currentFontSize}px`;
+      updateTransposeStatusUI();
+
+      const text = activeSong.letra || '';
+      if (!text.trim()) {
+        detailLyricsContainer.innerHTML = '<p class="text-zinc-400 text-center py-8 text-sm">暂无歌词内容</p>';
+        return;
+      }
+
+      const lines = text.split('\n');
+      const htmlLines = [];
+
+      for (let rawLine of lines) {
+        const line = rawLine.trimEnd();
+
+        // Línea vacía
+        if (!line.trim()) {
+          htmlLines.push('<div class="h-4"></div>');
+          continue;
+        }
+
+        // Título de sección (ej. 【副歌】 o [Chorus])
+        if (/^(【[^】]+】|\[(副歌|主歌|前奏|间奏|尾奏|桥段|Chorus|Verse|Bridge|Intro|Outro|Tag|\d+)[^\]]*\])$/i.test(line.trim())) {
+          htmlLines.push(`
+            <div class="font-bold text-xs uppercase tracking-wider text-zinc-500 mt-5 mb-2 flex items-center gap-1.5 select-none">
+              <span class="w-1.5 h-1.5 rounded-full bg-zinc-950"></span>
+              <span>${escapeHtml(line.trim())}</span>
+            </div>
+          `);
+          continue;
+        }
+
+        // Parsear unidades de acorde y letra en formato ChordPro
+        const regex = /\[([^\]]+)\]/g;
+        let lastIdx = 0;
+        let currentChord = null;
+        let units = [];
+        let match;
+
+        while ((match = regex.exec(line)) !== null) {
+          const token = match[1];
+          const textBefore = line.substring(lastIdx, match.index);
+
+          if (currentChord !== null || textBefore.length > 0) {
+            units.push({
+              chord: currentChord,
+              text: textBefore
+            });
+            currentChord = null;
+          }
+
+          if (isChordToken(token)) {
+            currentChord = transposeChord(token, currentTranspose);
+          } else {
+            // Etiqueta que no es acorde musical
+            units.push({
+              chord: null,
+              text: `[${token}]`
+            });
+          }
+
+          lastIdx = regex.lastIndex;
+        }
+
+        const textRemaining = line.substring(lastIdx);
+        if (currentChord !== null || textRemaining.length > 0) {
+          units.push({
+            chord: currentChord,
+            text: textRemaining
+          });
+        }
+
+        const hasChordsInLine = units.some(u => u.chord);
+
+        if (!hasChordsInLine || !showChords) {
+          // Línea limpia sin acordes
+          const cleanLineText = units.map(u => escapeHtml(u.text)).join('');
+          htmlLines.push(`<div class="my-1 leading-relaxed text-zinc-800">${cleanLineText || '&nbsp;'}</div>`);
+        } else {
+          // Línea interactiva con acordes flotantes exactamente sobre cada sílaba
+          const unitsHtml = units.map(u => {
+            const chordHtml = u.chord 
+              ? `<span class="chord-tag font-mono font-bold text-[0.82em] text-blue-600 leading-none mb-1 select-all">${escapeHtml(u.chord)}</span>` 
+              : `<span class="chord-tag font-mono text-[0.82em] leading-none mb-1 opacity-0 select-none">&nbsp;</span>`;
+            const textHtml = escapeHtml(u.text) || '&nbsp;';
+            return `
+              <span class="inline-flex flex-col items-start align-bottom mr-1 mb-1.5">
+                ${chordHtml}
+                <span class="lyric-syllable leading-normal text-zinc-900">${textHtml}</span>
+              </span>
+            `;
+          }).join('');
+
+          htmlLines.push(`<div class="chord-line flex flex-wrap items-end my-0.5">${unitsHtml}</div>`);
+        }
+      }
+
+      detailLyricsContainer.innerHTML = htmlLines.join('');
+    }
+
+    // 4. Abrir Modal de Detalle
     function openDetailModal(song) {
       activeSong = song;
+      currentTranspose = 0; // Reiniciar transposición al abrir canción
 
       document.getElementById('detail-title').textContent = song.titulo;
       document.getElementById('detail-category').textContent = song.categoria || '诗歌';
@@ -531,9 +753,8 @@ import Layout from '../layouts/Layout.astro';
         jianpuActions.classList.add('hidden');
       }
 
-      // Letra Tab
-      detailLyrics.textContent = song.letra || '暂无歌词文本';
-      detailLyrics.style.fontSize = `${currentFontSize}px`;
+      // Renderizar pestaña de Letra & Acordes
+      renderLyricsSheet();
 
       // Audio Tab
       const audioBox = document.getElementById('audio-player-box');
@@ -546,7 +767,6 @@ import Layout from '../layouts/Layout.astro';
         audioEmpty.classList.add('hidden');
 
         if (song.audioUrl.includes('youtube.com') || song.audioUrl.includes('youtu.be')) {
-          // Extraer ID de YouTube
           let videoId = '';
           if (song.audioUrl.includes('v=')) {
             videoId = song.audioUrl.split('v=')[1]?.split('&')[0];
@@ -579,7 +799,7 @@ import Layout from '../layouts/Layout.astro';
       document.body.style.overflow = 'hidden';
     }
 
-    // 4. Cambiar entre pestañas
+    // 5. Cambiar entre pestañas
     function switchTab(tab) {
       tabBtnJianpu.className = "py-3 px-4 border-b-2 " + (tab === 'jianpu' ? "border-zinc-950 text-zinc-950 font-bold" : "border-transparent text-zinc-500 hover:text-zinc-900") + " flex items-center gap-1.5 transition-all";
       tabBtnLyrics.className = "py-3 px-4 border-b-2 " + (tab === 'lyrics' ? "border-zinc-950 text-zinc-950 font-bold" : "border-transparent text-zinc-500 hover:text-zinc-900") + " flex items-center gap-1.5 transition-all";
@@ -601,25 +821,65 @@ import Layout from '../layouts/Layout.astro';
       document.getElementById('detail-youtube-iframe').src = '';
     });
 
+    // Control de Transposición (+1, -1, Reset)
+    btnTransposeUp?.addEventListener('click', () => {
+      currentTranspose = (currentTranspose + 1);
+      if (currentTranspose > 11) currentTranspose = 0;
+      renderLyricsSheet();
+    });
+
+    btnTransposeDown?.addEventListener('click', () => {
+      currentTranspose = (currentTranspose - 1);
+      if (currentTranspose < -11) currentTranspose = 0;
+      renderLyricsSheet();
+    });
+
+    btnTransposeReset?.addEventListener('click', () => {
+      currentTranspose = 0;
+      renderLyricsSheet();
+    });
+
+    // Toggle para mostrar/ocultar acordes
+    toggleShowChords?.addEventListener('change', (e) => {
+      showChords = e.target.checked;
+      renderLyricsSheet();
+    });
+
     // Control de tamaño de letra
     btnFontInc?.addEventListener('click', () => {
       if (currentFontSize < 28) {
         currentFontSize += 2;
-        detailLyrics.style.fontSize = `${currentFontSize}px`;
+        renderLyricsSheet();
       }
     });
 
     btnFontDec?.addEventListener('click', () => {
       if (currentFontSize > 12) {
         currentFontSize -= 2;
-        detailLyrics.style.fontSize = `${currentFontSize}px`;
+        renderLyricsSheet();
       }
     });
 
-    // Copiar letra
+    // Copiar letra (con o sin acordes transpuestos según la opción activa)
     btnCopyLyrics?.addEventListener('click', () => {
       if (!activeSong) return;
-      const textToCopy = `${activeSong.titulo}\n调号: ${activeSong.tono || '未定'}\n\n${activeSong.letra || ''}`;
+      let textToCopy = '';
+      if (showChords) {
+        const lines = (activeSong.letra || '').split('\n').map(line => {
+          return line.replace(/\[([^\]]+)\]/g, (m, token) => {
+            return isChordToken(token) ? `[${transposeChord(token, currentTranspose)}]` : m;
+          });
+        }).join('\n');
+        textToCopy = `${activeSong.titulo}\n调号: ${activeSong.tono || '未定'}${currentTranspose !== 0 ? ` (变调: ${currentTranspose > 0 ? '+' : ''}${currentTranspose})` : ''}\n\n${lines}`;
+      } else {
+        const cleanLines = (activeSong.letra || '').split('\n').map(line => {
+          return line.replace(/\[([^\]]+)\]/g, (m, token) => {
+            return isChordToken(token) ? '' : m;
+          });
+        }).join('\n');
+        textToCopy = `${activeSong.titulo}\n调号: ${activeSong.tono || '未定'}\n\n${cleanLines}`;
+      }
+
       navigator.clipboard.writeText(textToCopy).then(() => {
         btnCopyLyrics.textContent = '✓ 已复制歌词';
         setTimeout(() => {

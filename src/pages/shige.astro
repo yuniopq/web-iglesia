@@ -200,9 +200,10 @@ import Layout from '../layouts/Layout.astro';
       <!-- Cabecera del Modal -->
       <div class="px-6 py-5 border-b border-zinc-200 flex items-start justify-between bg-zinc-50">
         <div>
-          <div class="flex items-center gap-2 mb-1">
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
             <span id="detail-category" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-200 text-zinc-800"></span>
             <span id="detail-tone" class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-zinc-900 text-white"></span>
+            <span id="detail-bpm" class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-zinc-100 text-zinc-700 border border-zinc-200/80 hidden"></span>
           </div>
           <h2 id="detail-title" class="text-xl sm:text-2xl font-bold text-zinc-950"></h2>
         </div>
@@ -375,10 +376,14 @@ import Layout from '../layouts/Layout.astro';
           <input type="text" id="input-title" required placeholder="例如：这一生最美的祝福" class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm" />
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label class="block font-semibold text-zinc-700 mb-1">调号 / Tonalidad (简谱常用)</label>
+            <label class="block font-semibold text-zinc-700 mb-1">调号 / Tono</label>
             <input type="text" id="input-tone" placeholder="例如：1=D 4/4 或 G" class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm" />
+          </div>
+          <div>
+            <label class="block font-semibold text-zinc-700 mb-1">速度 / Velocidad (BPM)</label>
+            <input type="number" id="input-bpm" min="30" max="280" placeholder="例如：76 或 120" class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm font-mono" />
           </div>
           <div>
             <label class="block font-semibold text-zinc-700 mb-1">分类 / Categoría</label>
@@ -700,6 +705,7 @@ import Layout from '../layouts/Layout.astro';
         titulo: "这一生最美的祝福",
         tituloEs: "La bendición más hermosa de esta vida",
         tono: "1=D 4/4",
+        bpm: 76,
         categoria: "敬拜赞美",
         jianpuUrl: "https://images.unsplash.com/photo-1507838153414-b4b713384a76?auto=format&fit=crop&w=1200&q=80",
         audioUrl: "https://www.youtube.com/watch?v=Xh0wJ2_zN7Q",
@@ -710,6 +716,7 @@ import Layout from '../layouts/Layout.astro';
         titulo: "奇异恩典",
         tituloEs: "Sublime Gracia (Amazing Grace)",
         tono: "1=G 3/4",
+        bpm: 84,
         categoria: "经典圣诗",
         jianpuUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80",
         audioUrl: "https://www.youtube.com/watch?v=CDdvReNKKuk",
@@ -720,6 +727,7 @@ import Layout from '../layouts/Layout.astro';
         titulo: "云上太阳",
         tituloEs: "El sol sobre las nubes",
         tono: "1=C 4/4",
+        bpm: 96,
         categoria: "青年团契",
         jianpuUrl: "",
         audioUrl: "https://www.youtube.com/watch?v=hB9X8p6T48A",
@@ -730,6 +738,7 @@ import Layout from '../layouts/Layout.astro';
         titulo: "主的恩典样样都要数",
         tituloEs: "Cuenta tus bendiciones",
         tono: "1=Eb 2/4",
+        bpm: 112,
         categoria: "感恩奉献",
         jianpuUrl: "",
         audioUrl: "",
@@ -740,6 +749,7 @@ import Layout from '../layouts/Layout.astro';
         titulo: "这是耶和华所定日子",
         tituloEs: "Este es el día que hizo Jehová",
         tono: "1=E 4/4 (原调 F)",
+        bpm: 152,
         categoria: "敬拜赞美",
         jianpuUrl: "",
         audioUrl: "https://www.youtube.com/watch?v=1K5_4Y_WlDk",
@@ -946,9 +956,22 @@ import Layout from '../layouts/Layout.astro';
       const titulo = (obj.titulo || obj.title || obj.name || obj['歌名'] || obj['标题'] || '').trim();
       if (!titulo) return null;
 
+      let rawBpm = obj.bpm ?? obj.velocidad ?? obj.speed ?? obj.tempo ?? obj['速度'] ?? obj['节奏'] ?? null;
+      let bpm = null;
+      if (rawBpm !== null && rawBpm !== undefined && rawBpm !== '') {
+        const parsed = parseInt(rawBpm);
+        if (!isNaN(parsed) && parsed > 0) bpm = parsed;
+      }
+      if (!bpm && (obj.tono || obj.key || obj['调号'])) {
+        const tonoStr = (obj.tono || obj.key || obj['调号'] || '').toString();
+        const m = tonoStr.match(/(\d{2,3})\s*(?:bpm|拍)/i);
+        if (m) bpm = parseInt(m[1]);
+      }
+
       return {
         titulo,
         tono: (obj.tono || obj.key || obj.tone || obj['调号'] || '').trim(),
+        bpm: bpm || null,
         categoria: (obj.categoria || obj.category || obj['分类'] || '敬拜赞美').trim(),
         jianpuUrl: (obj.jianpuUrl || obj.jianpu || obj.partitura || obj.sheetMusic || obj['简谱'] || '').trim(),
         audioUrl: (obj.audioUrl || obj.audio || obj.youtube || obj.video || obj['试听'] || obj['音频'] || '').trim(),
@@ -961,6 +984,7 @@ import Layout from '../layouts/Layout.astro';
       const song = {
         titulo: '',
         tono: '',
+        bpm: null,
         categoria: '敬拜赞美',
         jianpuUrl: '',
         audioUrl: '',
@@ -989,6 +1013,13 @@ import Layout from '../layouts/Layout.astro';
         const toneMatch = trimmed.match(/^(?:调号|tonalidad|key|tone)\s*[:：]\s*(.+)/i);
         if (toneMatch) { song.tono = toneMatch[1].trim(); continue; }
 
+        const bpmMatch = trimmed.match(/^(?:速度|bpm|tempo|velocidad|speed)\s*[:：]\s*(.+)/i);
+        if (bpmMatch) {
+          const parsed = parseInt(bpmMatch[1]);
+          if (!isNaN(parsed) && parsed > 0) song.bpm = parsed;
+          continue;
+        }
+
         const catMatch = trimmed.match(/^(?:分类|category|categoria)\s*[:：]\s*(.+)/i);
         if (catMatch) { song.categoria = catMatch[1].trim(); continue; }
 
@@ -1003,6 +1034,11 @@ import Layout from '../layouts/Layout.astro';
           lyricLines.push(line);
           continue;
         }
+      }
+
+      if (!song.bpm && song.tono) {
+        const m = song.tono.match(/(\d{2,3})\s*(?:bpm|拍)/i);
+        if (m) song.bpm = parseInt(m[1]);
       }
 
       song.letra = lyricLines.join('\n').trim();
@@ -1342,7 +1378,10 @@ import Layout from '../layouts/Layout.astro';
               <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 text-zinc-600 border border-zinc-200">
                 ${song.categoria || '诗歌'}
               </span>
-              ${song.tono ? `<span class="font-mono text-xs font-bold text-zinc-950">${song.tono}</span>` : ''}
+              <div class="flex items-center gap-1.5 font-mono text-xs">
+                ${song.tono ? `<span class="font-bold text-zinc-950">${escapeHtml(song.tono)}</span>` : ''}
+                ${song.bpm ? `<span class="text-zinc-600 font-semibold bg-zinc-100 px-1.5 py-0.5 rounded text-[10px] border border-zinc-200/60">${song.bpm} BPM</span>` : ''}
+              </div>
             </div>
 
             <h3 class="font-bold text-base text-zinc-950 group-hover:text-zinc-700 transition-colors">
@@ -1536,6 +1575,16 @@ import Layout from '../layouts/Layout.astro';
       document.getElementById('detail-category').textContent = song.categoria || '诗歌';
       document.getElementById('detail-tone').textContent = song.tono ? `调号: ${song.tono}` : '调号未定';
 
+      const detailBpm = document.getElementById('detail-bpm');
+      if (detailBpm) {
+        if (song.bpm) {
+          detailBpm.textContent = `⚡ ${song.bpm} BPM`;
+          detailBpm.classList.remove('hidden');
+        } else {
+          detailBpm.classList.add('hidden');
+        }
+      }
+
       // 简谱 Tab
       const jianpuImg = document.getElementById('detail-jianpu-img');
       const jianpuEmpty = document.getElementById('jianpu-empty');
@@ -1697,6 +1746,7 @@ import Layout from '../layouts/Layout.astro';
       const songData = {
         titulo: activeSong.titulo,
         tono: activeSong.tono || '',
+        bpm: activeSong.bpm || null,
         categoria: activeSong.categoria || '敬拜赞美',
         jianpuUrl: activeSong.jianpuUrl || '',
         audioUrl: activeSong.audioUrl || '',
@@ -1742,6 +1792,8 @@ import Layout from '../layouts/Layout.astro';
       modalFormTitle.textContent = '添加新诗歌到云端';
       document.getElementById('btn-submit-song').textContent = '保存到云端诗歌本';
       formAdd.reset();
+      const inputBpm = document.getElementById('input-bpm');
+      if (inputBpm) inputBpm.value = '';
       setImagePreview(null);
       document.getElementById('add-error-msg').classList.add('hidden');
       modalAdd.classList.remove('hidden');
@@ -1760,6 +1812,8 @@ import Layout from '../layouts/Layout.astro';
 
       document.getElementById('input-title').value = activeSong.titulo || '';
       document.getElementById('input-tone').value = activeSong.tono || '';
+      const inputBpm = document.getElementById('input-bpm');
+      if (inputBpm) inputBpm.value = activeSong.bpm || '';
       document.getElementById('input-category').value = activeSong.categoria || '敬拜赞美';
       
       if (activeSong.jianpuUrl) {
@@ -1813,6 +1867,8 @@ import Layout from '../layouts/Layout.astro';
       modalAdd.classList.add('hidden');
       document.body.style.overflow = '';
       formAdd.reset();
+      const inputBpm = document.getElementById('input-bpm');
+      if (inputBpm) inputBpm.value = '';
       setImagePreview(null);
       document.getElementById('add-error-msg').classList.add('hidden');
     };
@@ -1841,9 +1897,13 @@ import Layout from '../layouts/Layout.astro';
           jianpuFinalUrl = activeSong.jianpuUrl;
         }
 
+        const bpmVal = document.getElementById('input-bpm')?.value?.trim();
+        const bpmNum = bpmVal ? parseInt(bpmVal) : null;
+
         const songData = {
           titulo: document.getElementById('input-title').value.trim(),
           tono: document.getElementById('input-tone').value.trim(),
+          bpm: (!isNaN(bpmNum) && bpmNum > 0) ? bpmNum : null,
           categoria: document.getElementById('input-category').value,
           jianpuUrl: jianpuFinalUrl,
           audioUrl: document.getElementById('input-audio-url').value.trim(),
@@ -1900,6 +1960,7 @@ import Layout from '../layouts/Layout.astro';
       inputQuickPaste.value = JSON.stringify({
         titulo: "这是耶和华所定日子",
         tono: "1=E 4/4 (原调 F)",
+        bpm: 152,
         categoria: "敬拜赞美",
         jianpuUrl: "https://drive.google.com/file/d/...",
         audioUrl: "https://www.youtube.com/watch?v=1K5_4Y_WlDk",
@@ -1922,6 +1983,8 @@ import Layout from '../layouts/Layout.astro';
       const song = songs[0];
       document.getElementById('input-title').value = song.titulo || '';
       document.getElementById('input-tone').value = song.tono || '';
+      const inputBpm = document.getElementById('input-bpm');
+      if (inputBpm) inputBpm.value = song.bpm || '';
       document.getElementById('input-category').value = song.categoria || '敬拜赞美';
       document.getElementById('input-audio-url').value = song.audioUrl || '';
       document.getElementById('input-lyrics').value = song.letra || '';
@@ -1975,6 +2038,7 @@ import Layout from '../layouts/Layout.astro';
         {
           titulo: "诗歌名示例 1",
           tono: "1=D 4/4",
+          bpm: 76,
           categoria: "敬拜赞美",
           jianpuUrl: "https://drive.google.com/file/d/...",
           audioUrl: "https://www.youtube.com/watch?v=...",
@@ -1983,6 +2047,7 @@ import Layout from '../layouts/Layout.astro';
         {
           titulo: "诗歌名示例 2",
           tono: "1=G 3/4",
+          bpm: 84,
           categoria: "经典圣诗",
           jianpuUrl: "",
           audioUrl: "",
@@ -2017,7 +2082,7 @@ import Layout from '../layouts/Layout.astro';
         batchPreviewList.innerHTML = parsedBatchSongs.map((s, idx) => `
           <li class="flex items-center justify-between py-1 border-b border-blue-100 last:border-0">
             <span class="font-bold text-zinc-900">${idx + 1}. 《${s.titulo}》</span>
-            <span class="text-zinc-500 text-[10px]">${s.tono || '无调号'} · ${s.categoria}</span>
+            <span class="text-zinc-500 text-[10px]">${s.tono || '无调号'}${s.bpm ? ` · ${s.bpm} BPM` : ''} · ${s.categoria}</span>
           </li>
         `).join('');
       } else {
@@ -2050,6 +2115,7 @@ import Layout from '../layouts/Layout.astro';
           await addDoc(shigeCol, {
             titulo: song.titulo,
             tono: song.tono || '',
+            bpm: song.bpm || null,
             categoria: song.categoria || '敬拜赞美',
             jianpuUrl: finalJianpu,
             audioUrl: song.audioUrl || '',
@@ -2277,7 +2343,7 @@ import Layout from '../layouts/Layout.astro';
 
       allAvailableSongs.forEach(song => {
         const isChecked = selectedMap.has(song.id);
-        const existingBpm = selectedMap.get(song.id) || 120;
+        const existingBpm = selectedMap.get(song.id) || song.bpm || 120;
 
         const row = document.createElement('div');
         row.className = "p-3 flex items-center justify-between gap-3 hover:bg-zinc-100/60 transition-colors";
@@ -2286,7 +2352,7 @@ import Layout from '../layouts/Layout.astro';
             <input type="checkbox" data-song-id="${song.id}" class="setlist-song-check rounded border-zinc-300 text-zinc-950 focus:ring-0 w-4 h-4 cursor-pointer" ${isChecked ? 'checked' : ''} />
             <div>
               <span class="font-bold text-zinc-900 text-xs">${escapeHtml(song.titulo)}</span>
-              <span class="text-[10.5px] text-zinc-400 block">${song.categoria || '诗歌'} · ${song.tono || '调号未定'}</span>
+              <span class="text-[10.5px] text-zinc-400 block">${song.categoria || '诗歌'} · ${song.tono || '调号未定'}${song.bpm ? ` · 原速 ${song.bpm} BPM` : ''}</span>
             </div>
           </label>
           <div class="flex items-center gap-1.5 shrink-0">
@@ -2497,7 +2563,7 @@ import Layout from '../layouts/Layout.astro';
         activeSetlist = {
           id: `temp-${setlistOrSong.id}`,
           titulo: `单曲演练：《${setlistOrSong.titulo}》`,
-          songs: [{ songId: setlistOrSong.id, bpm: 120 }]
+          songs: [{ songId: setlistOrSong.id, bpm: setlistOrSong.bpm || 120 }]
         };
       }
 
@@ -2562,7 +2628,7 @@ import Layout from '../layouts/Layout.astro';
       }
 
       // Sincronizar BPM objetivo
-      let songBpm = currentItem.bpm;
+      let songBpm = currentItem.bpm || song.bpm;
       if (!songBpm) {
         const bpmMatch = (song.tono || '').match(/(\d{2,3})\s*(?:bpm|拍)/i);
         songBpm = bpmMatch ? parseInt(bpmMatch[1]) : 120;

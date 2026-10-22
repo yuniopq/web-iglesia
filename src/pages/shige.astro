@@ -525,11 +525,11 @@ import Layout from '../layouts/Layout.astro';
 
   <!-- MODAL: SETLIST FORM (CREAR / EDITAR CARPETA DE CULTO) -->
   <div id="modal-setlist-form" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-zinc-200 overflow-hidden">
+    <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-zinc-200 overflow-hidden">
       <div class="px-6 py-4 border-b border-zinc-200 flex items-center justify-between bg-zinc-50">
         <div>
           <h3 id="modal-setlist-title" class="font-bold text-base text-zinc-950">新建敬拜歌单</h3>
-          <p class="text-xs text-zinc-500 mt-0.5">为特定主日或团契挑选 2~4 首诗歌</p>
+          <p class="text-xs text-zinc-500 mt-0.5">为特定主日或团契挑选 2~4 首诗歌并编排次序</p>
         </div>
         <button id="btn-close-setlist-form" type="button" class="text-zinc-400 hover:text-zinc-900 text-2xl leading-none">&times;</button>
       </div>
@@ -553,13 +553,45 @@ import Layout from '../layouts/Layout.astro';
           </div>
         </div>
 
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <label class="font-semibold text-zinc-700">选择诗歌 / Seleccionar Canciones (<span id="setlist-selected-count">0</span> 首已选)</label>
-            <span class="text-[10.5px] text-zinc-400">勾选并设置目标 BPM</span>
+        <!-- SECCIÓN 1: CANCIONES SELECCIONADAS Y ORDEN DE EJECUCIÓN -->
+        <div class="space-y-2 pt-1">
+          <div class="flex items-center justify-between">
+            <label class="font-bold text-zinc-900 text-xs flex items-center gap-1.5">
+              <span>🎼 已选敬拜诗歌与出场顺序</span>
+              <span id="setlist-selected-count-badge" class="px-2 py-0.5 rounded-full text-[10.5px] bg-zinc-900 text-white font-mono">0 首</span>
+            </label>
+            <span class="text-[11px] text-zinc-400">点击 ▲ ▼ 调整先后出场次序</span>
           </div>
-          <div id="setlist-songs-picker" class="border border-zinc-200 rounded-xl divide-y divide-zinc-100 max-h-56 overflow-y-auto bg-zinc-50/50">
-            <!-- Renderizado dinámico de canciones con checkboxes y BPM inputs -->
+
+          <!-- Lista de canciones seleccionadas en orden exacto -->
+          <div id="setlist-selected-order-list" class="space-y-1.5 min-h-[58px] p-2.5 rounded-xl bg-zinc-50 border border-zinc-200">
+            <!-- Renderizado dinámico con botones ▲ ▼ y eliminar -->
+          </div>
+        </div>
+
+        <!-- SECCIÓN 2: BUSCADOR EN EL CATÁLOGO PARA AÑADIR -->
+        <div class="space-y-2 pt-2 border-t border-zinc-100">
+          <div class="flex items-center justify-between">
+            <label class="font-bold text-zinc-800 text-xs">🔍 从曲库搜索并添加诗歌</label>
+            <span class="text-[11px] text-zinc-400 font-mono" id="setlist-catalog-total-count">曲库共 0 首</span>
+          </div>
+
+          <!-- Buscador rápido en tiempo real -->
+          <div class="relative">
+            <input
+              type="text"
+              id="setlist-catalog-search"
+              placeholder="快速搜索歌名、调号或关键词 (ej: 这一生, 1=D)..."
+              class="w-full pl-9 pr-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-xs placeholder:text-zinc-400 bg-white"
+            />
+            <svg class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+
+          <!-- Lista filtrable del catálogo con botón '+ 选入' -->
+          <div id="setlist-catalog-list" class="border border-zinc-200 rounded-xl divide-y divide-zinc-100 max-h-48 overflow-y-auto bg-white shadow-2xs">
+            <!-- Renderizado dinámico de canciones encontradas -->
           </div>
         </div>
 
@@ -2159,10 +2191,15 @@ import Layout from '../layouts/Layout.astro';
     const inputSetlistName = document.getElementById('input-setlist-name');
     const inputSetlistDate = document.getElementById('input-setlist-date');
     const inputSetlistNotes = document.getElementById('input-setlist-notes');
-    const setlistSongsPicker = document.getElementById('setlist-songs-picker');
-    const setlistSelectedCount = document.getElementById('setlist-selected-count');
+    const setlistSelectedOrderList = document.getElementById('setlist-selected-order-list');
+    const setlistSelectedCountBadge = document.getElementById('setlist-selected-count-badge');
+    const setlistCatalogSearch = document.getElementById('setlist-catalog-search');
+    const setlistCatalogList = document.getElementById('setlist-catalog-list');
+    const setlistCatalogTotalCount = document.getElementById('setlist-catalog-total-count');
     const setlistErrorMsg = document.getElementById('setlist-error-msg');
     const btnSubmitSetlist = document.getElementById('btn-submit-setlist');
+
+    let modalSelectedSongs = []; // Lista ordenada de { songId, bpm } para el culto actual
 
     // Alternar vistas: Biblioteca vs Carpetas de Culto
     tabNavLibrary?.addEventListener('click', () => {
@@ -2314,6 +2351,233 @@ import Layout from '../layouts/Layout.astro';
       });
     }
 
+    // Renderizar la lista de canciones seleccionadas en orden exacto
+    function renderModalSelectedList() {
+      if (setlistSelectedCountBadge) {
+        setlistSelectedCountBadge.textContent = `${modalSelectedSongs.length} 首`;
+      }
+
+      if (!setlistSelectedOrderList) return;
+
+      if (modalSelectedSongs.length === 0) {
+        setlistSelectedOrderList.innerHTML = `
+          <div class="py-5 text-center text-zinc-400 text-xs border border-dashed border-zinc-200 rounded-lg bg-white">
+            <p class="font-medium text-zinc-600 mb-0.5">尚未挑选诗歌</p>
+            <p class="text-[11px] text-zinc-400">请在下方搜索栏查找诗歌，点击「+ 选入」加入敬拜歌单</p>
+          </div>
+        `;
+        return;
+      }
+
+      const allAvailableSongs = currentSongs.length > 0 ? currentSongs : sampleSongs;
+      const total = modalSelectedSongs.length;
+
+      setlistSelectedOrderList.innerHTML = modalSelectedSongs.map((item, idx) => {
+        const s = allAvailableSongs.find(x => x.id === item.songId) || { titulo: "未知诗歌", tono: "" };
+        const isFirst = idx === 0;
+        const isLast = idx === total - 1;
+
+        return `
+          <div class="flex items-center justify-between p-2 sm:p-2.5 bg-white border border-zinc-200/90 rounded-xl shadow-2xs gap-2 transition-all hover:border-zinc-400">
+            <!-- Izquierda: Número de orden y título -->
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-6 h-6 rounded-lg bg-zinc-950 text-white font-mono font-bold flex items-center justify-center text-xs shrink-0 select-none">
+                ${idx + 1}
+              </span>
+              <div class="truncate">
+                <div class="font-bold text-zinc-900 truncate text-xs">${escapeHtml(s.titulo)}</div>
+                <div class="text-[10px] text-zinc-400 font-mono truncate">
+                  ${s.tono ? `<span class="font-semibold text-zinc-600">${escapeHtml(s.tono)}</span>` : '无调号'} · ${s.categoria || '诗歌'}
+                </div>
+              </div>
+            </div>
+
+            <!-- Derecha: BPM + Botones de orden ▲ ▼ + Eliminar -->
+            <div class="flex items-center gap-1 shrink-0">
+              <div class="flex items-center gap-1 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-200 text-xs" title="设置此歌的速度 (BPM)">
+                <span class="text-[10px] text-zinc-400 font-mono font-bold">BPM</span>
+                <input
+                  type="number"
+                  min="30"
+                  max="280"
+                  value="${item.bpm || 120}"
+                  data-selected-bpm-idx="${idx}"
+                  class="w-12 text-center font-mono font-bold text-xs bg-transparent focus:outline-none"
+                />
+              </div>
+
+              <!-- Botones de ordenar -->
+              <div class="flex items-center gap-0.5 border border-zinc-200 rounded-lg p-0.5 bg-zinc-50">
+                <button
+                  type="button"
+                  data-move-up="${idx}"
+                  class="w-5 h-5 rounded flex items-center justify-center font-bold text-zinc-700 hover:bg-zinc-200 transition-colors ${isFirst ? 'opacity-20 cursor-not-allowed' : 'hover:text-zinc-950'}"
+                  title="往前排 (Subir orden)"
+                  ${isFirst ? 'disabled' : ''}
+                >▲</button>
+                <button
+                  type="button"
+                  data-move-down="${idx}"
+                  class="w-5 h-5 rounded flex items-center justify-center font-bold text-zinc-700 hover:bg-zinc-200 transition-colors ${isLast ? 'opacity-20 cursor-not-allowed' : 'hover:text-zinc-950'}"
+                  title="往后排 (Bajar orden)"
+                  ${isLast ? 'disabled' : ''}
+                >▼</button>
+              </div>
+
+              <!-- Botón quitar -->
+              <button
+                type="button"
+                data-remove-idx="${idx}"
+                class="w-6 h-6 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-colors text-xs ml-0.5"
+                title="从歌单中移除"
+              >✕</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Eventos para inputs y botones de la lista seleccionada
+      setlistSelectedOrderList.querySelectorAll('input[data-selected-bpm-idx]').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const idx = parseInt(e.target.getAttribute('data-selected-bpm-idx'));
+          const val = parseInt(e.target.value);
+          if (!isNaN(idx) && modalSelectedSongs[idx]) {
+            modalSelectedSongs[idx].bpm = (!isNaN(val) && val > 0) ? val : 120;
+          }
+        });
+      });
+
+      setlistSelectedOrderList.querySelectorAll('button[data-move-up]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.getAttribute('data-move-up'));
+          if (idx > 0) {
+            const temp = modalSelectedSongs[idx];
+            modalSelectedSongs[idx] = modalSelectedSongs[idx - 1];
+            modalSelectedSongs[idx - 1] = temp;
+            renderModalSelectedList();
+            renderModalCatalogList();
+          }
+        });
+      });
+
+      setlistSelectedOrderList.querySelectorAll('button[data-move-down]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.getAttribute('data-move-down'));
+          if (idx < modalSelectedSongs.length - 1) {
+            const temp = modalSelectedSongs[idx];
+            modalSelectedSongs[idx] = modalSelectedSongs[idx + 1];
+            modalSelectedSongs[idx + 1] = temp;
+            renderModalSelectedList();
+            renderModalCatalogList();
+          }
+        });
+      });
+
+      setlistSelectedOrderList.querySelectorAll('button[data-remove-idx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.getAttribute('data-remove-idx'));
+          if (!isNaN(idx)) {
+            modalSelectedSongs.splice(idx, 1);
+            renderModalSelectedList();
+            renderModalCatalogList();
+          }
+        });
+      });
+    }
+
+    // Renderizar la lista de búsqueda y catálogo del formulario de Setlist
+    function renderModalCatalogList() {
+      if (!setlistCatalogList) return;
+
+      const allAvailableSongs = currentSongs.length > 0 ? currentSongs : sampleSongs;
+      if (setlistCatalogTotalCount) {
+        setlistCatalogTotalCount.textContent = `曲库共 ${allAvailableSongs.length} 首`;
+      }
+
+      const q = setlistCatalogSearch ? setlistCatalogSearch.value.toLowerCase().trim() : '';
+
+      const filtered = allAvailableSongs.filter(s => {
+        if (!q) return true;
+        return (s.titulo && s.titulo.toLowerCase().includes(q)) ||
+               (s.tituloEs && s.tituloEs.toLowerCase().includes(q)) ||
+               (s.tono && s.tono.toLowerCase().includes(q)) ||
+               (s.categoria && s.categoria.toLowerCase().includes(q)) ||
+               (s.letra && s.letra.toLowerCase().includes(q));
+      });
+
+      if (filtered.length === 0) {
+        setlistCatalogList.innerHTML = `
+          <div class="py-6 text-center text-zinc-400 text-xs">
+            未搜索到符合「${escapeHtml(q)}」的诗歌
+          </div>
+        `;
+        return;
+      }
+
+      setlistCatalogList.innerHTML = filtered.map(song => {
+        const addedIndex = modalSelectedSongs.findIndex(x => x.songId === song.id);
+        const isAdded = addedIndex !== -1;
+
+        return `
+          <div class="p-2.5 flex items-center justify-between gap-2 hover:bg-zinc-50 transition-colors border-b border-zinc-100 last:border-0 text-xs">
+            <div class="min-w-0 truncate">
+              <div class="font-bold text-zinc-900 truncate">${escapeHtml(song.titulo)}</div>
+              <div class="text-[10px] text-zinc-400 font-mono truncate">
+                ${song.tono ? `<span class="font-semibold text-zinc-600">${escapeHtml(song.tono)}</span>` : '无调号'}
+                ${song.bpm ? ` · <span class="text-zinc-500 font-semibold">${song.bpm} BPM</span>` : ''}
+                · <span class="text-zinc-400">${song.categoria || '诗歌'}</span>
+              </div>
+            </div>
+
+            <div class="shrink-0 flex items-center gap-1.5">
+              ${isAdded ? `
+                <button
+                  type="button"
+                  data-catalog-toggle="${song.id}"
+                  class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors flex items-center gap-1 group"
+                  title="点击可从歌单中移除"
+                >
+                  <span class="group-hover:hidden">✓ 第 ${addedIndex + 1} 首</span>
+                  <span class="hidden group-hover:inline">✕ 移除</span>
+                </button>
+              ` : `
+                <button
+                  type="button"
+                  data-catalog-toggle="${song.id}"
+                  class="px-3 py-1 rounded-md text-[11px] font-bold bg-zinc-950 text-white hover:bg-zinc-800 transition-colors shadow-2xs flex items-center gap-1"
+                >
+                  <span>+</span>
+                  <span>选入</span>
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Evento para añadir o remover desde el catálogo
+      setlistCatalogList.querySelectorAll('button[data-catalog-toggle]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const songId = btn.getAttribute('data-catalog-toggle');
+          const idx = modalSelectedSongs.findIndex(x => x.songId === songId);
+          if (idx !== -1) {
+            modalSelectedSongs.splice(idx, 1);
+          } else {
+            const targetSong = allAvailableSongs.find(s => s.id === songId);
+            const defaultBpm = targetSong?.bpm || 120;
+            modalSelectedSongs.push({ songId, bpm: defaultBpm });
+          }
+          renderModalSelectedList();
+          renderModalCatalogList();
+        });
+      });
+    }
+
+    // Buscador en tiempo real del catálogo de Setlists
+    setlistCatalogSearch?.addEventListener('input', () => {
+      renderModalCatalogList();
+    });
+
     // Modal Crear / Editar Setlist
     function openSetlistFormModal(setlistToEdit = null) {
       setlistErrorMsg?.classList.add('hidden');
@@ -2324,6 +2588,7 @@ import Layout from '../layouts/Layout.astro';
         inputSetlistName.value = setlistToEdit.titulo || '';
         inputSetlistDate.value = setlistToEdit.fecha || '';
         inputSetlistNotes.value = setlistToEdit.notas || '';
+        modalSelectedSongs = setlistToEdit.songs ? JSON.parse(JSON.stringify(setlistToEdit.songs)) : [];
       } else {
         document.getElementById('modal-setlist-title').textContent = '新建敬拜歌单';
         inputSetlistId.value = '';
@@ -2331,44 +2596,12 @@ import Layout from '../layouts/Layout.astro';
         inputSetlistDate.value = today;
         inputSetlistName.value = `${today} 主日敬拜`;
         inputSetlistNotes.value = '主领: 敬拜团';
+        modalSelectedSongs = [];
       }
 
-      setlistSongsPicker.innerHTML = '';
-      const selectedMap = new Map();
-      if (setlistToEdit && setlistToEdit.songs) {
-        setlistToEdit.songs.forEach(item => selectedMap.set(item.songId, item.bpm || 120));
-      }
-
-      const allAvailableSongs = currentSongs.length > 0 ? currentSongs : sampleSongs;
-
-      allAvailableSongs.forEach(song => {
-        const isChecked = selectedMap.has(song.id);
-        const existingBpm = selectedMap.get(song.id) || song.bpm || 120;
-
-        const row = document.createElement('div');
-        row.className = "p-3 flex items-center justify-between gap-3 hover:bg-zinc-100/60 transition-colors";
-        row.innerHTML = `
-          <label class="flex items-center gap-2.5 cursor-pointer flex-grow select-none">
-            <input type="checkbox" data-song-id="${song.id}" class="setlist-song-check rounded border-zinc-300 text-zinc-950 focus:ring-0 w-4 h-4 cursor-pointer" ${isChecked ? 'checked' : ''} />
-            <div>
-              <span class="font-bold text-zinc-900 text-xs">${escapeHtml(song.titulo)}</span>
-              <span class="text-[10.5px] text-zinc-400 block">${song.categoria || '诗歌'} · ${song.tono || '调号未定'}${song.bpm ? ` · 原速 ${song.bpm} BPM` : ''}</span>
-            </div>
-          </label>
-          <div class="flex items-center gap-1.5 shrink-0">
-            <span class="text-[10px] text-zinc-400">BPM</span>
-            <input type="number" min="40" max="250" value="${existingBpm}" data-bpm-for="${song.id}" class="w-16 px-2 py-1 rounded border border-zinc-200 text-xs font-mono text-center bg-white" />
-          </div>
-        `;
-        setlistSongsPicker.appendChild(row);
-      });
-
-      const updateSelectedCount = () => {
-        const checks = setlistSongsPicker.querySelectorAll('.setlist-song-check:checked');
-        if (setlistSelectedCount) setlistSelectedCount.textContent = checks.length;
-      };
-      setlistSongsPicker.addEventListener('change', updateSelectedCount);
-      updateSelectedCount();
+      if (setlistCatalogSearch) setlistCatalogSearch.value = '';
+      renderModalSelectedList();
+      renderModalCatalogList();
 
       modalSetlistForm?.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
@@ -2378,6 +2611,8 @@ import Layout from '../layouts/Layout.astro';
       modalSetlistForm?.classList.add('hidden');
       document.body.style.overflow = '';
       formSetlist.reset();
+      modalSelectedSongs = [];
+      if (setlistCatalogSearch) setlistCatalogSearch.value = '';
       setlistErrorMsg?.classList.add('hidden');
     };
 
@@ -2388,27 +2623,18 @@ import Layout from '../layouts/Layout.astro';
     // Guardar Setlist en Firestore
     formSetlist?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const checkedBoxes = setlistSongsPicker.querySelectorAll('.setlist-song-check:checked');
-      if (checkedBoxes.length === 0) {
-        setlistErrorMsg.textContent = '请至少勾选 1 首诗歌加入敬拜歌单。';
+      if (modalSelectedSongs.length === 0) {
+        setlistErrorMsg.textContent = '请至少选择 1 首诗歌加入敬拜歌单。';
         setlistErrorMsg.classList.remove('hidden');
         return;
       }
-
-      const selectedSongs = [];
-      checkedBoxes.forEach(box => {
-        const songId = box.getAttribute('data-song-id');
-        const bpmInput = setlistSongsPicker.querySelector(`input[data-bpm-for="${songId}"]`);
-        const bpm = bpmInput ? parseInt(bpmInput.value) || 120 : 120;
-        selectedSongs.push({ songId, bpm });
-      });
 
       const editId = inputSetlistId.value;
       const setlistData = {
         titulo: inputSetlistName.value.trim(),
         fecha: inputSetlistDate.value,
         notas: inputSetlistNotes.value.trim(),
-        songs: selectedSongs
+        songs: modalSelectedSongs
       };
 
       btnSubmitSetlist.disabled = true;

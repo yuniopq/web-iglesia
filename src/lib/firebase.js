@@ -3,6 +3,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 // Configuración oficial de Firebase del proyecto web-iglesia-9210d
 const firebaseConfig = {
@@ -20,6 +21,9 @@ export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getA
 
 // Inicializar Firestore (Base de datos en la nube)
 export const db = getFirestore(app);
+
+// Inicializar Firebase Storage (Almacenamiento de archivos/imágenes)
+export const storage = getStorage(app);
 
 // Inicializar Analytics solo en el entorno del navegador del cliente
 export let analytics = null;

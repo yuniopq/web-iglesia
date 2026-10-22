@@ -287,9 +287,42 @@ import Layout from '../layouts/Layout.astro';
         </div>
 
         <div>
-          <label class="block font-semibold text-zinc-700 mb-1">简谱图片网址 / URL de imagen de 简谱 (Partitura)</label>
-          <input type="url" id="input-jianpu-url" placeholder="https://ejemplo.com/jianpu.jpg" class="w-full px-3 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-sm" />
-          <p class="text-[11px] text-zinc-400 mt-0.5">可填写简谱图片的公开在线链接（支持 JPG, PNG, WebP）</p>
+          <label class="block font-semibold text-zinc-700 mb-1">简谱图片 / Partitura (Imagen)</label>
+          
+          <div class="space-y-2">
+            <!-- Zona de arrastre / Selector de archivo local -->
+            <div id="drop-zone" class="border-2 border-dashed border-zinc-300 hover:border-zinc-950 rounded-xl p-4 text-center cursor-pointer transition-colors bg-zinc-50/70 group">
+              <input type="file" id="input-jianpu-file" accept="image/*" class="hidden" />
+              
+              <div id="upload-prompt" class="space-y-1">
+                <div class="text-2xl group-hover:scale-110 transition-transform">📷</div>
+                <p class="text-xs font-semibold text-zinc-800">
+                  点击选择 或 拖拽本地简谱图片到这里
+                </p>
+                <p class="text-[10.5px] text-zinc-400">
+                  支持从电脑或手机相册选择 (JPG, PNG, WebP)
+                </p>
+              </div>
+
+              <!-- Vista previa de imagen -->
+              <div id="image-preview-container" class="hidden relative inline-block max-w-full">
+                <img id="image-preview" src="" alt="Vista previa de partitura" class="max-h-36 rounded-lg border border-zinc-200 shadow-2xs object-contain mx-auto" />
+                <button type="button" id="btn-remove-image" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-red-700 shadow transition-colors" title="移除图片">
+                  &times;
+                </button>
+                <p id="image-file-name" class="text-[10.5px] text-zinc-500 mt-1 truncate max-w-xs mx-auto"></p>
+              </div>
+            </div>
+
+            <!-- Entrada opcional de URL o Google Drive -->
+            <div>
+              <div class="flex items-center gap-1.5 mb-1">
+                <span class="text-[11px] text-zinc-500">或者输入网络图片 / Google Drive 链接:</span>
+              </div>
+              <input type="text" id="input-jianpu-url" placeholder="https://... 或粘贴 Google Drive 分享链接" class="w-full px-3 py-1.5 rounded-lg border border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 text-xs" />
+              <p class="text-[10px] text-zinc-400 mt-0.5">支持 Google Drive 分享链接，系统会自动识别并转换。</p>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -332,8 +365,9 @@ import Layout from '../layouts/Layout.astro';
 
   <!-- SCRIPT CLIENTE PARA FIRESTORE Y CONTROL DE INTERFAZ -->
   <script>
-    import { db } from '../lib/firebase.js';
+    import { db, storage } from '../lib/firebase.js';
     import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
+    import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
     // Canciones semilla precargadas con sintaxis de acordes ChordPro [Acorde]
     const sampleSongs = [
@@ -376,6 +410,16 @@ import Layout from '../layouts/Layout.astro';
         jianpuUrl: "",
         audioUrl: "",
         letra: "[Eb]有时遇见苦难如同[Bb]大风浪，[Eb]有时忧伤失望几乎[Bb]要灰心\n[Eb]若是数算恩典样样[Ab]都要数，[Eb]必能叫你希奇[Bb]感谢主恩[Eb]深\n\n【副歌】\n[Eb]主的恩典样样都要数，[Bb]主的恩典都要记清楚\n[Eb]主的恩典样样都要[Ab]数，[Eb]必能叫你希奇[Bb]感谢主恩[Eb]深"
+      },
+      {
+        id: "seed-5",
+        titulo: "这是耶和华所定日子",
+        tituloEs: "Este es el día que hizo Jehová",
+        tono: "1=E 4/4 (原调 F)",
+        categoria: "敬拜赞美",
+        jianpuUrl: "",
+        audioUrl: "https://www.youtube.com/watch?v=1K5_4Y_WlDk",
+        letra: "[前奏]\n[G#m]    [C#m]    [F#m7]    [B]\n\n【主歌】\n这是耶和[E]华所定日子，\n神的儿女[C#m]当欢呼喜乐。\n耶和华已[F#m]战胜仇敌，[F#m/E]战胜仇敌，\n全[B]地大声欢呼。\n\n这是耶和[E]华所定日子，\n神的儿女[C#m]当欢呼喜乐。\n耶和华已[F#m]战胜仇敌，[F#m/E]战胜仇敌，\n全[B]地大声欢呼。\n\n【副歌】\n[E]耶和华是[B]我力量，\n我[C#m]心中一切的盼[G#m]望，\n耶[A]和华是我[E/G#]的诗歌，\n又[F#m]是我的拯[B]救；\n\n[E]神子民行[B]走全地，\n报好[C#m]消息宣告你的[G#m]名，\n高[A]举得胜的[E/G#]旌旗。\n我们[F#m]称谢你，[B]你是我[E]神。"
       }
     ];
 
@@ -473,6 +517,153 @@ import Layout from '../layouts/Layout.astro';
     // Banner de muestra
     const seedBanner = document.getElementById('seed-banner');
     const btnSeedFirebase = document.getElementById('btn-seed-firebase');
+
+    // Elementos del selector y subida de imagen de partitura (简谱)
+    const dropZone = document.getElementById('drop-zone');
+    const inputJianpuFile = document.getElementById('input-jianpu-file');
+    const inputJianpuUrl = document.getElementById('input-jianpu-url');
+    const uploadPrompt = document.getElementById('upload-prompt');
+    const imagePreviewContainer = document.getElementById('image-preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const btnRemoveImage = document.getElementById('btn-remove-image');
+    const imageFileName = document.getElementById('image-file-name');
+
+    let selectedImageFile = null;
+
+    // Convertir enlaces de Google Drive o limpiar URLs
+    function formatDriveOrImageUrl(url) {
+      if (!url) return '';
+      const trimmed = url.trim();
+      const driveMatch = trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (driveMatch) {
+        return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+      }
+      return trimmed;
+    }
+
+    // Comprimir imagen local para alta velocidad y compatibilidad directa
+    function compressImage(file, maxWidth = 1600, quality = 0.82) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+          const img = new Image();
+          img.src = e.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/webp', quality);
+            resolve(dataUrl);
+          };
+          img.onerror = reject;
+        };
+        reader.onerror = reject;
+      });
+    }
+
+    // Subir imagen a Firebase Storage con fallback automático a compresión WebP
+    async function processImageUpload(file) {
+      if (!file) return '';
+      const compressedDataUrl = await compressImage(file);
+
+      try {
+        const ext = file.name.split('.').pop() || 'jpg';
+        const filename = `jianpu/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
+        const storageRef = ref(storage, filename);
+
+        const res = await fetch(compressedDataUrl);
+        const blob = await res.blob();
+        const snapshot = await uploadBytes(storageRef, blob);
+        return await getDownloadURL(snapshot.ref);
+      } catch (storageErr) {
+        console.warn("Firebase Storage no disponible o reglas pendientes, guardando imagen comprimida en Firestore:", storageErr);
+        return compressedDataUrl;
+      }
+    }
+
+    function setImagePreview(src, name = '') {
+      if (src) {
+        imagePreview.src = src;
+        imageFileName.textContent = name;
+        imagePreviewContainer.classList.remove('hidden');
+        uploadPrompt.classList.add('hidden');
+      } else {
+        imagePreview.src = '';
+        imageFileName.textContent = '';
+        imagePreviewContainer.classList.add('hidden');
+        uploadPrompt.classList.remove('hidden');
+        selectedImageFile = null;
+        if (inputJianpuFile) inputJianpuFile.value = '';
+      }
+    }
+
+    dropZone?.addEventListener('click', (e) => {
+      if (e.target.closest('#btn-remove-image')) return;
+      inputJianpuFile?.click();
+    });
+
+    dropZone?.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-zinc-950', 'bg-zinc-100');
+    });
+
+    dropZone?.addEventListener('dragleave', () => {
+      dropZone.classList.remove('border-zinc-950', 'bg-zinc-100');
+    });
+
+    dropZone?.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-zinc-950', 'bg-zinc-100');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleFileSelect(e.dataTransfer.files[0]);
+      }
+    });
+
+    inputJianpuFile?.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleFileSelect(e.target.files[0]);
+      }
+    });
+
+    function handleFileSelect(file) {
+      if (!file.type.startsWith('image/')) {
+        alert('请选择有效的图片文件 (JPG, PNG, WebP)');
+        return;
+      }
+      selectedImageFile = file;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result, file.name);
+        if (inputJianpuUrl) inputJianpuUrl.value = '';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    btnRemoveImage?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setImagePreview(null);
+    });
+
+    inputJianpuUrl?.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      if (val) {
+        const formatted = formatDriveOrImageUrl(val);
+        setImagePreview(formatted, '网络或 Google Drive 图片');
+        selectedImageFile = null;
+        if (inputJianpuFile) inputJianpuFile.value = '';
+      }
+    });
 
     // 1. Cargar canciones desde Firebase Firestore (con fallback a canciones de muestra)
     function loadSongs() {
@@ -704,7 +895,29 @@ import Layout from '../layouts/Layout.astro';
           const cleanLineText = units.map(u => escapeHtml(u.text)).join('');
           htmlLines.push(`<div class="my-1 leading-relaxed text-zinc-800">${cleanLineText || '&nbsp;'}</div>`);
         } else {
-          // Línea interactiva con acordes flotantes exactamente sobre cada sílaba
+          // 1. Caso especial: Línea exclusivamente de acordes (instrumental, intro, interludio, solo)
+          const isChordOnlyLine = hasChordsInLine && units.every(u => !u.text || /^[|\/\-.\s]*$/.test(u.text));
+
+          if (isChordOnlyLine) {
+            const chordRowHtml = units.map(u => {
+              const chordHtml = u.chord 
+                ? `<span class="chord-tag font-mono font-bold text-[0.88em] text-blue-600 bg-blue-50/70 px-2.5 py-0.5 rounded-md border border-blue-200/60 select-all shadow-2xs">${escapeHtml(u.chord)}</span>` 
+                : '';
+              const sep = u.text ? escapeHtml(u.text) : '';
+              const sepHtml = sep.trim() ? `<span class="text-zinc-400 font-mono px-1 select-none">${sep}</span>` : (sep ? `<span class="inline-block w-3"></span>` : '');
+              return `${chordHtml}${sepHtml}`;
+            }).join('');
+
+            htmlLines.push(`
+              <div class="chord-only-line flex flex-wrap items-center gap-2 my-2 py-1.5 px-3 rounded-lg bg-zinc-100/70 border border-zinc-200/80">
+                <span class="text-[10px] font-bold text-zinc-400 select-none mr-1 font-mono tracking-wider">和弦:</span>
+                ${chordRowHtml}
+              </div>
+            `);
+            continue;
+          }
+
+          // 2. Línea regular con letra y acordes alineados sobre cada sílaba
           const unitsHtml = units.map(u => {
             const chordHtml = u.chord 
               ? `<span class="chord-tag font-mono font-bold text-[0.82em] text-blue-600 leading-none mb-1 select-all">${escapeHtml(u.chord)}</span>` 
@@ -713,7 +926,7 @@ import Layout from '../layouts/Layout.astro';
             return `
               <span class="inline-flex flex-col items-start align-bottom mr-1 mb-1.5">
                 ${chordHtml}
-                <span class="lyric-syllable leading-normal text-zinc-900">${textHtml}</span>
+                <span class="lyric-syllable leading-normal text-zinc-900 whitespace-pre min-h-[1.25em]">${textHtml}</span>
               </span>
             `;
           }).join('');
@@ -920,6 +1133,7 @@ import Layout from '../layouts/Layout.astro';
       modalFormTitle.textContent = '添加新诗歌到云端';
       document.getElementById('btn-submit-song').textContent = '保存到云端诗歌本';
       formAdd.reset();
+      setImagePreview(null);
       document.getElementById('add-error-msg').classList.add('hidden');
       modalAdd.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
@@ -938,7 +1152,15 @@ import Layout from '../layouts/Layout.astro';
       document.getElementById('input-title').value = activeSong.titulo || '';
       document.getElementById('input-tone').value = activeSong.tono || '';
       document.getElementById('input-category').value = activeSong.categoria || '敬拜赞美';
-      document.getElementById('input-jianpu-url').value = activeSong.jianpuUrl || '';
+      
+      if (activeSong.jianpuUrl) {
+        setImagePreview(activeSong.jianpuUrl, '当前保存的简谱图片');
+        inputJianpuUrl.value = activeSong.jianpuUrl.startsWith('data:') ? '' : activeSong.jianpuUrl;
+      } else {
+        setImagePreview(null);
+        inputJianpuUrl.value = '';
+      }
+
       document.getElementById('input-audio-url').value = activeSong.audioUrl || '';
       document.getElementById('input-lyrics').value = activeSong.letra || '';
 
@@ -982,6 +1204,7 @@ import Layout from '../layouts/Layout.astro';
       modalAdd.classList.add('hidden');
       document.body.style.overflow = '';
       formAdd.reset();
+      setImagePreview(null);
       document.getElementById('add-error-msg').classList.add('hidden');
     };
 
@@ -998,16 +1221,26 @@ import Layout from '../layouts/Layout.astro';
       submitBtn.textContent = '正在保存到云端...';
       errorMsg.classList.add('hidden');
 
-      const songData = {
-        titulo: document.getElementById('input-title').value.trim(),
-        tono: document.getElementById('input-tone').value.trim(),
-        categoria: document.getElementById('input-category').value,
-        jianpuUrl: document.getElementById('input-jianpu-url').value.trim(),
-        audioUrl: document.getElementById('input-audio-url').value.trim(),
-        letra: document.getElementById('input-lyrics').value.trim(),
-      };
-
+      let jianpuFinalUrl = '';
       try {
+        if (selectedImageFile) {
+          submitBtn.textContent = '正在处理并上传简谱图片...';
+          jianpuFinalUrl = await processImageUpload(selectedImageFile);
+        } else if (inputJianpuUrl.value.trim()) {
+          jianpuFinalUrl = formatDriveOrImageUrl(inputJianpuUrl.value.trim());
+        } else if (editId && activeSong && activeSong.jianpuUrl && !imagePreviewContainer.classList.contains('hidden')) {
+          jianpuFinalUrl = activeSong.jianpuUrl;
+        }
+
+        const songData = {
+          titulo: document.getElementById('input-title').value.trim(),
+          tono: document.getElementById('input-tone').value.trim(),
+          categoria: document.getElementById('input-category').value,
+          jianpuUrl: jianpuFinalUrl,
+          audioUrl: document.getElementById('input-audio-url').value.trim(),
+          letra: document.getElementById('input-lyrics').value.trim(),
+        };
+
         if (!editId) {
           // 1. Modo creación nuevo
           await addDoc(collection(db, 'shige'), {
@@ -1033,7 +1266,7 @@ import Layout from '../layouts/Layout.astro';
         closeAddModal();
       } catch (err) {
         console.error("Error al guardar en Firestore:", err);
-        errorMsg.textContent = `保存失败 (${err.code || '权限受限'})：请在 Firebase 控制台的 Firestore 规则(Rules)中允许写入。`;
+        errorMsg.textContent = `保存失败 (${err.code || '权限受限'})：请检查网络或 Firebase 控制台 Firestore 规则。`;
         errorMsg.classList.remove('hidden');
       } finally {
         submitBtn.disabled = false;

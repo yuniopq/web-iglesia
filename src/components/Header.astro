@@ -80,6 +80,93 @@ const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
         <span class="lang-zh">参与聚会</span>
         <span class="lang-es">Visítanos</span>
       </a>
+
+      <!-- Botón de Menú Hamburguesa para Móvil (Visible solo en pantallas pequeñas) -->
+      <button
+        id="btn-mobile-menu"
+        type="button"
+        class="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100 transition-colors"
+        aria-label="Abrir menú de navegación"
+        aria-expanded="false"
+      >
+        <!-- Icono Hamburguesa (3 líneas) -->
+        <svg id="icon-menu-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+        <!-- Icono Cerrar (X) -->
+        <svg id="icon-menu-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Menú Desplegable Móvil -->
+  <div id="mobile-menu" class="hidden md:hidden border-t border-zinc-200 bg-white/95 backdrop-blur-md px-4 pt-3 pb-5 space-y-2 shadow-lg transition-all">
+    <nav class="flex flex-col space-y-1 text-sm font-medium text-zinc-700">
+      <a href={`${baseUrl}/#inicio`} class="mobile-nav-link px-3 py-2.5 rounded-lg hover:bg-zinc-100 hover:text-zinc-950 transition-colors">
+        <span class="lang-zh">首页</span>
+        <span class="lang-es">Inicio</span>
+      </a>
+      <a href={`${baseUrl}/#horarios`} class="mobile-nav-link px-3 py-2.5 rounded-lg hover:bg-zinc-100 hover:text-zinc-950 transition-colors">
+        <span class="lang-zh">聚会时间</span>
+        <span class="lang-es">Horarios</span>
+      </a>
+      <a href={`${baseUrl}/shige`} class="mobile-nav-link px-3 py-2.5 rounded-lg hover:bg-zinc-100 hover:text-zinc-950 transition-colors flex items-center justify-between">
+        <span>
+          <span class="lang-zh">诗歌本</span>
+          <span class="lang-es">Himnario & Alabanzas</span>
+        </span>
+        <span class="text-[10px] bg-zinc-900 text-white px-2 py-0.5 rounded-full font-mono">新 / Nuevo</span>
+      </a>
+      <a href={`${baseUrl}/#contacto`} class="mobile-nav-link px-3 py-2.5 rounded-lg hover:bg-zinc-100 hover:text-zinc-950 transition-colors">
+        <span class="lang-zh">联系我们</span>
+        <span class="lang-es">Contacto</span>
+      </a>
+    </nav>
+    <div class="pt-2 border-t border-zinc-100">
+      <a 
+        href={`${baseUrl}/#horarios`}
+        class="mobile-nav-link flex items-center justify-center w-full px-4 py-2.5 text-xs font-semibold rounded-lg text-white bg-zinc-950 hover:bg-zinc-800 transition-colors shadow-xs"
+      >
+        <span class="lang-zh">参与聚会 (主日崇拜 & 团契)</span>
+        <span class="lang-es">Visítanos (Cultos y Reuniones)</span>
+      </a>
     </div>
   </div>
 </header>
+
+<script is:inline>
+  const btnMobileMenu = document.getElementById('btn-mobile-menu');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const iconMenuOpen = document.getElementById('icon-menu-open');
+  const iconMenuClose = document.getElementById('icon-menu-close');
+
+  function toggleMobileMenu() {
+    if (!mobileMenu) return;
+    const isClosed = mobileMenu.classList.contains('hidden');
+    if (isClosed) {
+      mobileMenu.classList.remove('hidden');
+      iconMenuOpen?.classList.add('hidden');
+      iconMenuClose?.classList.remove('hidden');
+      btnMobileMenu?.setAttribute('aria-expanded', 'true');
+    } else {
+      mobileMenu.classList.add('hidden');
+      iconMenuOpen?.classList.remove('hidden');
+      iconMenuClose?.classList.add('hidden');
+      btnMobileMenu?.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  btnMobileMenu?.addEventListener('click', toggleMobileMenu);
+
+  // Cerrar el menú al pulsar en cualquiera de los enlaces de navegación
+  document.querySelectorAll('.mobile-nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      mobileMenu?.classList.add('hidden');
+      iconMenuOpen?.classList.remove('hidden');
+      iconMenuClose?.classList.add('hidden');
+      btnMobileMenu?.setAttribute('aria-expanded', 'false');
+    });
+  });
+</script>
